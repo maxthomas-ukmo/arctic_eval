@@ -1,7 +1,9 @@
 import os
 import yaml
-import xarray as xr
 import datetime
+
+import numpy as np
+import xarray as xr
 
 from esmvaltool.diag_scripts.shared import ProvenanceLogger
 
@@ -254,3 +256,66 @@ def convert_cftime_to_datetime(cftime_array):
     # Convert cftime to datetime
     date_time_converted = [datetime.datetime(t.year, t.month, t.day) for t in cftime_array]
     return date_time_converted
+
+def get_region_indicies(region, lon2d, lat2d):
+    """Define regions for data selection.
+
+    Note, this function is adapted from the ESMValTool recipe_arctic_ocean.
+
+    Parameters
+    ----------
+    region: str
+        the name of the region
+    lon2d: 2d numpy array
+    lat2d: 2d numpy array
+
+    Returns
+    -------
+    indexesi: 1d numpy array
+        i indexes of the selected points
+    indexesj: 1d numpy array
+        j indexes of the selected points
+    """
+    if region == 'EB':
+        # Eurasian Basin of the Arctic Ocean
+        indi, indj = np.where((lon2d > 300) & (lat2d > 80))
+        indi2, indj2 = np.where((lon2d < 100) & (lat2d > 80))
+        indi3, indj3 = np.where((lon2d > 100) & (lon2d < 140) & (lat2d > 66))
+
+        indexesi = np.hstack((indi, indi2, indi3))
+        indexesj = np.hstack((indj, indj2, indj3))
+    elif region == 'AB':
+        # Amerasian basin of the Arctic Ocean
+        indi, indj = np.where((lon2d >= 260) & (lon2d <= 300) & (lat2d >= 80))
+        indi2, indj2 = np.where((lon2d >= 140) & (lon2d < 260) & (lat2d > 66))
+
+        indexesi = np.hstack((indi, indi2))
+        indexesj = np.hstack((indj, indj2))
+    elif region == 'Barents_sea':
+
+        indi, indj = np.where((lon2d >= 20) & (lon2d <= 55) & (lat2d >= 70)
+                              & (lat2d <= 80))
+
+        indexesi = indi
+        indexesj = indj
+    elif region == 'North_sea':
+        # Amerasian basin of the Arctic Ocean
+        indi, indj = np.where((lon2d >= 355) & (lon2d <= 360) & (lat2d >= 50)
+                              & (lat2d <= 60))
+        indi2, indj2 = np.where((lon2d >= 0) & (lon2d <= 10) & (lat2d >= 50)
+                                & (lat2d <= 60))
+
+        indexesi = np.hstack((indi, indi2))
+        indexesj = np.hstack((indj, indj2))
+    else:
+        print('Region {} is not recognized'.format(region))
+    return indexesi, indexesj
+
+def make_region_mask(region, lon2d, lat2d):
+    ii, ij = get_region_indicies(region, lon2d, lat2d)
+    mask = np.zeros_like(lon2d, dtype=bool)
+    mask[ii, ij] = True
+    return mask 
+
+def get_region_centers(regions):
+    pass

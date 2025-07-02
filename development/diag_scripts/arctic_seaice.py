@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 from esmvaltool.diag_scripts.shared import run_diagnostic
 
-from arctic_seaice.plotting import SeasonalCycle, GeoMap, Timeseries, StraitFluxPlotter
+from arctic_seaice.plotting import SeasonalCycle, GeoMap, Timeseries, StraitFluxPlotter, RegionPlotter
 
 from arctic_seaice.utils import save_object, get_format_properties
 from arctic_seaice.utils import ProvenanceRecord 
@@ -158,7 +158,6 @@ def plot_ocean_strait_flux_crosssection(cfg):
         fig.suptitle('Strait flux cross - ' + strait)
         fig.tight_layout()
         save_object(fig, strait + '_cross.png', cfg, provenance_record.record)
-
 
 def plot_seasonal_cycles(cfg):
     '''Plot seasonal cycle for a list of variables and datasets given in config dictionary from esmvaltool recipe.'''
@@ -329,6 +328,39 @@ def plot_timeseries(cfg):
         # Save figure to output dir and add it to provenance record
         save_object(fig, variable+'_timeseries.png', cfg, provenance_record.record)
 
+def plot_regions(cfg):
+    # For each model, plot one axes with all regions
+    # Print input data files
+    input_data = cfg['input_data']
+    for key in input_data:
+        print(key)
+        print(input_data[key])
+        print('==============================================')
+
+    # models = []
+    # for dataset in cfg['model_datasets']:
+    #     print('1111111111111111111')
+    #     print(dataset)
+    #     print('2222222222222222222')
+    #     if 'Mean' in dataset:
+    #         models.append(dataset)
+    #         print('JJJJJJJJJJJJJJJJJJJJ')
+
+    # for imodel, model in enumerate(models):
+    for dataset in cfg['model_datasets']:
+        print('KKKKKKKKKKKKKKKKKKKKKKKK')
+        fig = plt.figure(dpi=300)
+        # create a provenance record for the regions fig
+        provenance_record = ProvenanceRecord()
+
+        region_plotter = RegionPlotter(input_data, dataset, 'siconc', cfg['regions'])
+        ax = region_plotter.add_map_axes(fig)
+        region_plotter.plot_all_regions(ax)
+
+        # Save figure to output dir and add it to provenance record
+        save_object(fig, dataset +'_regions.png', cfg, provenance_record.record)
+
+
 def main(cfg):
     ''' Execute the diagnostoc for a given configuration dictionary from esmvaltool recipe.'''
 
@@ -346,6 +378,9 @@ def main(cfg):
             plot_ocean_strait_flux_timeseries(cfg)
         if 'crosssection' in cfg['plot_type']:
             plot_ocean_strait_flux_crosssection(cfg)
+
+    if cfg['script'] == 'regions':
+        plot_regions(cfg)
 
 
 if __name__ == '__main__':

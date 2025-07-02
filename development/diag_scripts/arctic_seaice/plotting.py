@@ -1,6 +1,7 @@
 import xarray as xr
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
+import numpy as np
 
 import arctic_seaice.utils as utils
 
@@ -345,7 +346,67 @@ class StraitFluxPlotter(Loader):
         if add_y_labels:
             ax.set_ylabel('depth / z')
     
+class RegionPlotter(Loader):
+    ''' Calculate region masks from a dataset and allow plotting as a QC figure. We only need to do this once per model.
 
+    Keyword arguments:
+    input_data (dict) -- dictionary of input data
+    dataset (str) -- dataset name (dataset name from ESGF)
+    variable (str) -- variable name (short CMOR name)
+    aliases (list) -- list of aliases for the various dataset entries (i.e. ['Mean', 'Min', 'Max']) (default [None])
+    '''
+    def __init__(self, input_data, dataset, variable, regions, aliases=[None], map_parameters=None):
+        super().__init__(input_data, dataset, variable, aliases)
+        self.lon2d = self.data['main'].lon
+        self.lat2d = self.data['main'].lat
+        self.map_parameters = map_parameters
+        self.regions = regions
+        self.region_centers = utils.get_region_centers(self.regions)
+        self.masks = self.make_region_masks()
+
+    # TODO: move add_map_axes out of class so it can be called here and in geomap without repitition
+    def add_map_axes(self, fig):
+        ''' Add map axes to a figure.
+
+        Keyword arguments:
+        fig (matplotlib.figure) -- figure object to plot on
+        '''
+        if self.map_parameters is None:
+            self.map_parameters = {'projection': ccrs.NorthPolarStereo(),
+                                   'extent': [0, 360, 60, 90],
+                                   'coastlines': True,
+                                   'gridlines': True}
         
+        ax = fig.add_subplot(111, projection=self.map_parameters['projection'])
+        ax.set_extent(self.map_parameters['extent'], ccrs.PlateCarree())
+        if self.map_parameters['coastlines']:
+            ax.coastlines()
+        if self.map_parameters['gridlines']:
+            ax.gridlines()
+        return ax
+    
+
+    def make_region_masks(self):
+        ''' Make region masks for the regions defined in the input data. '''
+        masks = {}
+        for region in self.regions:
+            masks[region] = utils.make_region_mask(region, self.lon2d, self.lat2d)
+        return masks
+    
+
+    def plot_one_region(self, ax, region, color, alpha=0.5, vmin=0, vmax=1, transform=ccrs.PlateCarree()):
+        mask = self.masks[region] # 2D array of 1s and 0s for the region mask
+        plot_mask = np.ma.masked_where(mask == 0, mask) # Mask the region
+        ax.pcolormesh(self.lon2d, self.lat2d, plot_mask * color, alpha=alpha, vmin=vmin, vmax=vmax, transform=transform)
+    
+    def plot_all_regions(self, ax, alpha=0.5, vmin=0, vmax=1, transform=ccrs.PlateCarree()):
+        n_regions = len(self.regions)
+        for i, region in enumerate(self.regions):
+            color = 0 + i / n_regions
+            self.plot_one_region(ax, region, color, alpha=alpha, vmin=vmin, vmax=vmax, transform=transform)
+            # TODO: add label to each region center
+
+
+
     
     
