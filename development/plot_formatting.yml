@@ -1,0 +1,7 @@
+dataset:
+  HadGEM3-GC31-LL:
+    colour: 'r'
+  HadGEM3-GC31-MM:
+    colour: 'b'
+  HadISST:
+    colour: 'k'
