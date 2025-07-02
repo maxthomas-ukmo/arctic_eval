@@ -1,0 +1,9 @@
+Making a customisable environment for esmvaltool.
+
+./duplicate_a_scitools_env.sh <lock file> <new env name>
+
+on 2/12/24
+>> ./duplicate_a_scitools_env.sh esmvaltool-2.11.0.lock esmvaltool-2.11.0-strait_flux
+>> conda install xesmf xmip tqdm
+tested and working fine with recipe_arctic_seaice.sh
+for some reason had to conda install xmip later 
