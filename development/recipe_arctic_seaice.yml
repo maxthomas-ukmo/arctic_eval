@@ -22,7 +22,7 @@ documentation:
 # Model problems
 datasets:
   - {dataset: HadGEM3-GC31-LL, project: CMIP6, mip: SImon, exp: historical, ensemble: r*i1p1f3, grid: gn}
-#  - {dataset: HadGEM3-GC31-MM, project: CMIP6, mip: SImon, exp: historical, ensemble: r*i1p1f3, grid: gn}
+  - {dataset: HadGEM3-GC31-MM, project: CMIP6, mip: SImon, exp: historical, ensemble: r*i1p1f3, grid: gn}
 
 preprocessors:
 
@@ -147,5 +147,6 @@ diagnostics:
         dummy_plot: False
         variables_to_plot: [siconc]
         regions: ['EB', 'AB', 'Barents_sea']
-        model_datasets: [HadGEM3-GC31-LL]
+        region_centers: [[85,0], [85, 180], [75, 40]]
+        model_datasets: [HadGEM3-GC31-LL, HadGEM3-GC31-MM]
         obs_datasets: [HadISST]

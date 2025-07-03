@@ -355,13 +355,13 @@ class RegionPlotter(Loader):
     variable (str) -- variable name (short CMOR name)
     aliases (list) -- list of aliases for the various dataset entries (i.e. ['Mean', 'Min', 'Max']) (default [None])
     '''
-    def __init__(self, input_data, dataset, variable, regions, aliases=[None], map_parameters=None):
+    def __init__(self, input_data, dataset, variable, regions, region_centers, aliases=[None], map_parameters=None):
         super().__init__(input_data, dataset, variable, aliases)
         self.lon2d = self.data['main'].lon
         self.lat2d = self.data['main'].lat
         self.map_parameters = map_parameters
         self.regions = regions
-        self.region_centers = utils.get_region_centers(self.regions)
+        self.region_centers = region_centers
         self.masks = self.make_region_masks()
 
     # TODO: move add_map_axes out of class so it can be called here and in geomap without repitition
@@ -405,6 +405,15 @@ class RegionPlotter(Loader):
             color = 0 + i / n_regions
             self.plot_one_region(ax, region, color, alpha=alpha, vmin=vmin, vmax=vmax, transform=transform)
             # TODO: add label to each region center
+            centers = self.region_centers[i]
+            lat, lon = centers[0], centers[1]
+            self.label_region_center(ax, lon, lat, region)
+
+    def label_region_center(self, ax, lon, lat, text, fontsize=10):
+        ''' Label a region center on the map. '''
+        ax.text(lon, lat, text, 
+                fontsize=fontsize, transform=ccrs.PlateCarree(), ha='center', va='center', color='black', 
+                bbox=dict(facecolor='white', alpha=0.5, edgecolor='none'))
 
 
 

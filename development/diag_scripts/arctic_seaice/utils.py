@@ -316,6 +316,3 @@ def make_region_mask(region, lon2d, lat2d):
     mask = np.zeros_like(lon2d, dtype=bool)
     mask[ii, ij] = True
     return mask 
-
-def get_region_centers(regions):
-    pass

@@ -348,12 +348,11 @@ def plot_regions(cfg):
 
     # for imodel, model in enumerate(models):
     for dataset in cfg['model_datasets']:
-        print('KKKKKKKKKKKKKKKKKKKKKKKK')
         fig = plt.figure(dpi=300)
         # create a provenance record for the regions fig
         provenance_record = ProvenanceRecord()
 
-        region_plotter = RegionPlotter(input_data, dataset, 'siconc', cfg['regions'])
+        region_plotter = RegionPlotter(input_data, dataset, 'siconc', cfg['regions'], cfg['region_centers'])
         ax = region_plotter.add_map_axes(fig)
         region_plotter.plot_all_regions(ax)
 
