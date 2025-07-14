@@ -171,7 +171,16 @@ def plot_seasonal_cycles(cfg):
 
     # Get formatting properties from YAML file
     formatting = get_format_properties()
+
+    # # Get regions to plot
+    # regions = cfg['regions']
+    # if not regions:
+    #     region = 'Arctic'
     
+    # # Loop over regions
+    # for region in regions:
+    #     print('Plotting seasonal cycles for region: %s' % region)
+
     # Loop over variables
     for variable in cfg['variables_to_plot']:
         # Create figure for one variable
@@ -187,7 +196,7 @@ def plot_seasonal_cycles(cfg):
             colour = formatting['dataset'][dataset]['colour']
             try:
                 # Create seasonal cycle object for dataset and variable
-                seasonal_cycle = SeasonalCycle(input_data, dataset, variable, aliases=[dataset+'Mean', dataset+'Min', dataset+'Max'])
+                seasonal_cycle = SeasonalCycle(input_data, dataset, variable, aliases=[dataset+'Mean', dataset+'Min', dataset+'Max'], region=region)
                 # Plot seasonal cycle to axes for that variable
                 seasonal_cycle.plot(ax, line_parameters={'colour': colour})
                 # Add ancestors to provenance record
@@ -202,7 +211,7 @@ def plot_seasonal_cycles(cfg):
                 colour = formatting['dataset'][dataset]['colour']
                 try:
                     # Create seasonal cycle object for observational dataset and variable
-                    seasonal_cycle = SeasonalCycle(input_data, dataset, variable, aliases=['OBS'])
+                    seasonal_cycle = SeasonalCycle(input_data, dataset, variable, aliases=['OBS'], region=region)
                     # Plot seasonal cycle to axes for that variable                 
                     seasonal_cycle.plot(ax, line_parameters={'colour': colour})
                     # Add ancestors to provenance record
@@ -228,37 +237,48 @@ def plot_geographical_maps(cfg):
     # Get formatting properties from YAML file
     formatting = get_format_properties()
 
-    # Loop over desired time slices
-    for time_slice in cfg['months']:
-        # Loop over variables
-        for variable in cfg['variables_to_plot']:
+    # Get regions to plot
+    regions = cfg['regions']
+    if not regions:
+        regions = ['Arctic']
 
-            for dataset in cfg['model_datasets']:
-                # Create figure for each dataset, variable, and time slice
-                fig = plt.figure(dpi=300)
+    for region in regions:
+        # Loop over desired time slices
+        for time_slice in cfg['months']:
+            # Loop over variables
+            for variable in cfg['variables_to_plot']:
 
-                geo_map = GeoMap(input_data, dataset, variable, aliases=[dataset+'Mean'])
+                for dataset in cfg['model_datasets']:
+                    # Create figure for each dataset, variable, and time slice
+                    fig = plt.figure(dpi=300)
 
-                # Make a new data variable in geo_map.data. In this case we take a monthly slice
-                subset = geo_map.get_month_slice(time_slice, statistics='time_mean')
+                    print('GGGGGGG')
+                    print(region)
+                    print(dataset)
+                    print(time_slice)
+                    print(variable)
+                    geo_map = GeoMap(input_data, dataset, variable, aliases=[dataset+'Mean'], region=region)
 
-                ax = geo_map.add_map_axes(fig)
+                    # Make a new data variable in geo_map.data. In this case we take a monthly slice
+                    subset = geo_map.get_month_slice(time_slice, statistics='time_mean')
 
-                # Plot the subset data
-                geo_map.plot(ax, subset)
+                    ax = geo_map.add_map_axes(fig)
 
-                # Create provenance record for one variable
-                provenance_record = ProvenanceRecord()
+                    # Plot the subset data
+                    geo_map.plot(ax, subset)
 
-                fig_name = variable + '_geographical_map_' + dataset + '_' + subset + '.png'
-                # Save figure to output dir and add it to provenance record
-                save_object(fig, fig_name, cfg, provenance_record.record)
+                    # Create provenance record for one variable
+                    provenance_record = ProvenanceRecord(region=region)
+
+                    fig_name = variable + '_' + region + '_geographical_map_' + dataset + '_' + subset + '.png'
+                    # Save figure to output dir and add it to provenance record
+                    save_object(fig, fig_name, cfg, provenance_record.record)
 
             for dataset in cfg['obs_datasets']:
                 # Create figure for each dataset, variable, and time slice
                 fig = plt.figure(dpi=300)
 
-                geo_map = GeoMap(input_data, dataset, variable, aliases=['OBS'])
+                geo_map = GeoMap(input_data, dataset, variable, aliases=['OBS'], region=region)
 
                 # Make a new data variable in geo_map.data. In this case we take a monthly slice
                 subset = geo_map.get_month_slice(time_slice, statistics='time_mean')
@@ -269,9 +289,9 @@ def plot_geographical_maps(cfg):
                 geo_map.plot(ax, subset)
 
                 # Create provenance record for one variable
-                provenance_record = ProvenanceRecord()
+                provenance_record = ProvenanceRecord(region=region)
 
-                fig_name = variable + '_geographical_map_' + dataset + '_' + subset + '.png'
+                fig_name = variable + '_' + region + '_geographical_map_' + dataset + '_' + subset + '.png'
                 # Save figure to output dir and add it to provenance record
                 save_object(fig, fig_name, cfg, provenance_record.record)
 

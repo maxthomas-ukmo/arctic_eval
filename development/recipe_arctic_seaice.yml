@@ -22,7 +22,7 @@ documentation:
 # Model problems
 datasets:
   - {dataset: HadGEM3-GC31-LL, project: CMIP6, mip: SImon, exp: historical, ensemble: r*i1p1f3, grid: gn}
-  - {dataset: HadGEM3-GC31-MM, project: CMIP6, mip: SImon, exp: historical, ensemble: r*i1p1f3, grid: gn}
+#  - {dataset: HadGEM3-GC31-MM, project: CMIP6, mip: SImon, exp: historical, ensemble: r*i1p1f3, grid: gn}
 
 preprocessors:
 
@@ -94,26 +94,27 @@ diagnostics:
   #       script: /home/users/max.thomas/projects/esmvaltool/development/diag_scripts/arctic_seaice.py
   #       dummy_plot: False
   #       variables_to_plot: [siconc] #, sivol]
-  #       model_datasets: [HadGEM3-GC31-LL] #, HadGEM3-GC31-MM]
-  #       obs_datasets: [HadISST]
-
-  # maps:
-  #   description: Maps of March and September sea-ice concentration
-  #   variables:
-  #     siconc: 
-  #       start_year: 1979
-  #       end_year: 2000
-  #       preprocessor: 2D_map
-  #       additional_datasets:
-  #       -  {dataset: HadISST, project: OBS, mip: OImon, tier: 2, type: reanaly, version: 1} 
-  #   scripts:
-  #     geo_map_march_sept:
-  #       script: /home/users/max.thomas/projects/esmvaltool/development/diag_scripts/arctic_seaice.py
-  #       dummy_plot: False
-  #       variables_to_plot: [siconc]
   #       model_datasets: [HadGEM3-GC31-LL, HadGEM3-GC31-MM]
   #       obs_datasets: [HadISST]
-  #       months: [3, 9]        
+
+  maps:
+    description: Maps of March and September sea-ice concentration
+    variables:
+      siconc: 
+        start_year: 1979
+        end_year: 2000
+        preprocessor: 2D_map
+        additional_datasets:
+        -  {dataset: HadISST, project: OBS, mip: OImon, tier: 2, type: reanaly, version: 1} 
+    scripts:
+      geo_map_march_sept:
+        script: /home/users/max.thomas/projects/esmvaltool/development/diag_scripts/arctic_seaice.py
+        dummy_plot: False
+        variables_to_plot: [siconc]
+        regions: ['EB', 'AB', 'Barents_sea', 'Arctic']
+        model_datasets: [HadGEM3-GC31-LL] #, HadGEM3-GC31-MM]
+        obs_datasets: [] # [HadISST]
+        months: [3, 9]        
 
   # timeseries:
   #   description: Time series of integrated sea-ice area
@@ -148,5 +149,5 @@ diagnostics:
         variables_to_plot: [siconc]
         regions: ['EB', 'AB', 'Barents_sea']
         region_centers: [[85,0], [85, 180], [75, 40]]
-        model_datasets: [HadGEM3-GC31-LL, HadGEM3-GC31-MM]
+        model_datasets: [HadGEM3-GC31-LL] #, HadGEM3-GC31-MM]
         obs_datasets: [HadISST]

@@ -66,9 +66,9 @@ class GeoMap(Loader):
     alias (str) -- alias for the dataset entry (default None)
     map_parameters (dict) -- dictionary of parameters to define map properties (default None)
     '''
-    def __init__(self, input_data, dataset, variable, aliases=None, map_parameters=None):
+    def __init__(self, input_data, dataset, variable, aliases=None, map_parameters=None, region=None):
         # Initialise from SeasonalCycle
-        super().__init__(input_data, dataset, variable, aliases)
+        super().__init__(input_data, dataset, variable, aliases, region=region)
         # Add map parameters
         self.map_parameters = map_parameters
 
@@ -387,12 +387,11 @@ class RegionPlotter(Loader):
     
 
     def make_region_masks(self):
-        ''' Make region masks for the regions defined in the input data. '''
+        ''' Make region masks for the regions defined in the input data.'''
         masks = {}
         for region in self.regions:
-            masks[region] = utils.make_region_mask(region, self.lon2d, self.lat2d)
+            masks[region] = utils.make_region_mask(region, self.lon2d, self.lat2d) # boolean array with similar shape to nav_lat/lon
         return masks
-    
 
     def plot_one_region(self, ax, region, color, alpha=0.5, vmin=0, vmax=1, transform=ccrs.PlateCarree()):
         mask = self.masks[region] # 2D array of 1s and 0s for the region mask
@@ -414,6 +413,9 @@ class RegionPlotter(Loader):
         ax.text(lon, lat, text, 
                 fontsize=fontsize, transform=ccrs.PlateCarree(), ha='center', va='center', color='black', 
                 bbox=dict(facecolor='white', alpha=0.5, edgecolor='none'))
+        
+    def apply_mask_to_data(self, dataloader, region):
+        pass
 
 
 

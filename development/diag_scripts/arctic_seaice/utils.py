@@ -16,7 +16,7 @@ class Loader():
     variable (str) -- variable name (short CMOR name)
     aliases (list) -- list of aliases for the various dataset entries (i.e. ['Mean', 'Min', 'Max']) (default [None])
     '''
-    def __init__(self, input_data, dataset, variable, aliases=[None], debug_string='SeasonalCycle'):
+    def __init__(self, input_data, dataset, variable, aliases=[None], debug_string='SeasonalCycle', region=None):
         # Read arguments into self
         self.input_data = input_data
         self.variable = variable
@@ -36,7 +36,15 @@ class Loader():
             self.rename_variable()
             # Replace OBS alias with dataset name if needed
             self.replace_obs_alias()
-
+        
+        # If there is a region passed, we mask the data to that region at this stage, before passing to the plot functions
+        self.region = region
+        print('FFFFFFFFF')
+        print(region)
+        if not self.region is None:
+            print('Subsetting to region %s' % self.region)
+            self.subset_region()
+        
     def get_input_files(self):
         raw_input_files = []
         used_aliases = []
@@ -111,8 +119,7 @@ class Loader():
                 piomas_area_file = select_input_data_entry(self.input_data, 'PIOMAS', 'areacello', 'OBS')
                 self.data['area'] = xr.open_dataset(piomas_area_file)['areacello']
                 self.data['main'] = self.data['main'] * self.data['area']
-        
-        
+               
     def rename_variable(self):
         ''' Rename variable if needed because of incomplete cmorization.'''
         if self.dataset == 'HadISST' and self.variable == 'siconc':
@@ -130,6 +137,24 @@ class Loader():
             self.plot_time = self.data['main']['time'].values
         elif 'HadGEM' in self.dataset: # HadGEM time variable needs converting
             self.plot_time = convert_cftime_to_datetime(self.data['main']['time'].values)
+
+    def subset_region(self):
+        region_mask = make_region_mask(self.region, self.data['main']['lon'], self.data['main']['lat'])
+        # Subset the data to the region mask
+
+        region_mask_xr = xr.DataArray(
+        region_mask,
+        dims=('j', 'i'),  # or whatever your spatial dims are called
+        coords={'i': self.data['main']['i'], 'j': self.data['main']['j']}
+        )
+        region_mask_xr = region_mask_xr.broadcast_like(self.data['main'])
+
+
+        data_main = self.data['main'].where(region_mask_xr, drop=True)
+        self.data['main'] = data_main
+        # if 'min' in self.data:
+        #     self.data['min'] = self.data['min'].where(region_mask_xr, drop=True)
+        #     self.data['max'] = self.data['max'].where(region_mask_xr, drop=True)
 
 def get_format_properties(plot_formatting='/home/users/max.thomas/projects/esmvaltool/development/plot_formatting.yml', properties=['colour']):
     '''Reads format properties from a YAML file.
@@ -309,9 +334,17 @@ def get_region_indicies(region, lon2d, lat2d):
         indexesj = np.hstack((indj, indj2))
     else:
         print('Region {} is not recognized'.format(region))
+        print('Defaulting to whole Arctic')
+        indi, indj = np.where(lat2d >= 60)
+
+        indexesi = indi
+        indexesj = indj
+
     return indexesi, indexesj
 
 def make_region_mask(region, lon2d, lat2d):
+    print('Making region mask for region: %s' % region)
+    print(lon2d)
     ii, ij = get_region_indicies(region, lon2d, lat2d)
     mask = np.zeros_like(lon2d, dtype=bool)
     mask[ii, ij] = True
