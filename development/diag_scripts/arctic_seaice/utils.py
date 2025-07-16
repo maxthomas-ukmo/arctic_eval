@@ -345,7 +345,10 @@ def get_region_indicies(region, lon2d, lat2d):
 def make_region_mask(region, lon2d, lat2d):
     print('Making region mask for region: %s' % region)
     print(lon2d)
-    ii, ij = get_region_indicies(region, lon2d, lat2d)
+    indexesi, indexesj = get_region_indicies(region, lon2d, lat2d)
     mask = np.zeros_like(lon2d, dtype=bool)
-    mask[ii, ij] = True
+    if len(mask.shape) == 2:
+        mask[indexesi, indexesj] = True
+    else:
+        print('Need to implement 1D logic here')
     return mask 
