@@ -17,6 +17,7 @@ class SeasonalCycle(Loader):
     aliases (list) -- list of aliases for the various dataset entries (i.e. ['Mean', 'Min', 'Max']) (default [None])
     '''
     def __init__(self, input_data, dataset, variable, aliases=[None], region=None):
+        print('111111111111111111111111111111')
         super().__init__(input_data, dataset, variable, aliases, region=region)
         print('SeasonalCycle: __init__: ')
         print('For dataset %s and variable %s' % (self.dataset, self.variable))
@@ -27,7 +28,11 @@ class SeasonalCycle(Loader):
         if self.variable == 'siconc':
             self._multiply_by_area()
             self._sum_over_area()
-            
+
+        print('22222222222222222222222222')
+        print(self.data['main'])
+        print('22222222222222222222222222')
+
 
     def _multiply_by_area(self):
         print('Multiplying %s by areacello.' % self.variable)

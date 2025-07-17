@@ -172,57 +172,57 @@ def plot_seasonal_cycles(cfg):
     # Get formatting properties from YAML file
     formatting = get_format_properties()
 
-    # # Get regions to plot
-    # regions = cfg['regions']
-    # if not regions:
-    #     region = 'Arctic'
+    # Get regions to plot
+    regions = cfg['regions']
+    if not regions:
+        region = 'Arctic'
     
-    # # Loop over regions
-    # for region in regions:
-    #     print('Plotting seasonal cycles for region: %s' % region)
+    # Loop over regions
+    for region in regions:
+        print('Plotting seasonal cycles for region: %s' % region)
 
-    # Loop over variables
-    for variable in cfg['variables_to_plot']:
-        # Create figure for one variable
-        fig = plt.figure(dpi=300)
-        ax = fig.add_subplot(111)
+        # Loop over variables
+        for variable in cfg['variables_to_plot']:
+            # Create figure for one variable
+            fig = plt.figure(dpi=300)
+            ax = fig.add_subplot(111)
 
-        # Create provenance record for one variable
-        provenance_record = ProvenanceRecord()
+            # Create provenance record for one variable
+            provenance_record = ProvenanceRecord()
 
-        # Loop over model datasets
-        for dataset in cfg['model_datasets']:
-            # Get colour for dataset
-            colour = formatting['dataset'][dataset]['colour']
-            try:
-                # Create seasonal cycle object for dataset and variable
-                seasonal_cycle = SeasonalCycle(input_data, dataset, variable, aliases=[dataset+'Mean', dataset+'Min', dataset+'Max'], region=None)
-                # Plot seasonal cycle to axes for that variable
-                seasonal_cycle.plot(ax, line_parameters={'colour': colour})
-                # Add ancestors to provenance record
-                provenance_record.add_ancestors(seasonal_cycle.provenance_list)
-            except:
-                logger.warning('No data found for %s %s' % (variable, dataset))
-
-        # Loop over observational datasets
-        if cfg['obs_datasets']:
-            for dataset in cfg['obs_datasets']:
+            # Loop over model datasets
+            for dataset in cfg['model_datasets']:
                 # Get colour for dataset
                 colour = formatting['dataset'][dataset]['colour']
                 try:
-                    # Create seasonal cycle object for observational dataset and variable
-                    seasonal_cycle = SeasonalCycle(input_data, dataset, variable, aliases=['OBS'], region=None)
-                    # Plot seasonal cycle to axes for that variable                 
+                    # Create seasonal cycle object for dataset and variable
+                    seasonal_cycle = SeasonalCycle(input_data, dataset, variable, aliases=[dataset+'Mean', dataset+'Min', dataset+'Max'], region=region)
+                    # Plot seasonal cycle to axes for that variable
                     seasonal_cycle.plot(ax, line_parameters={'colour': colour})
                     # Add ancestors to provenance record
                     provenance_record.add_ancestors(seasonal_cycle.provenance_list)
                 except:
                     logger.warning('No data found for %s %s' % (variable, dataset))
-                    for key in input_data:
-                        print(input_data[key])
-        
-        # Save figure to output dir and add it to provenance record
-        save_object(fig, variable+'_seasonal_cycle.png', cfg, provenance_record.record)
+
+            # Loop over observational datasets
+            if cfg['obs_datasets']:
+                for dataset in cfg['obs_datasets']:
+                    # Get colour for dataset
+                    colour = formatting['dataset'][dataset]['colour']
+                    try:
+                        # Create seasonal cycle object for observational dataset and variable
+                        seasonal_cycle = SeasonalCycle(input_data, dataset, variable, aliases=['OBS'], region=region)
+                        # Plot seasonal cycle to axes for that variable                 
+                        seasonal_cycle.plot(ax, line_parameters={'colour': colour})
+                        # Add ancestors to provenance record
+                        provenance_record.add_ancestors(seasonal_cycle.provenance_list)
+                    except:
+                        logger.warning('No data found for %s %s' % (variable, dataset))
+                        for key in input_data:
+                            print(input_data[key])
+            
+            # Save figure to output dir and add it to provenance record
+            save_object(fig, variable + '_' + region + '_seasonal_cycle.png', cfg, provenance_record.record)
 
 def plot_geographical_maps(cfg):
     '''Plot geographical map for a list of variables and datasets given in config dictionary from esmvaltool recipe.'''

@@ -174,17 +174,30 @@ class Loader():
         dims=('j', 'i'),  # or whatever your spatial dims are called
         coords={'i': self.data['main']['i'], 'j': self.data['main']['j']}
         )
-        region_mask_xr = region_mask_xr.broadcast_like(self.data['main'])
-
-        self.region_mask_xr = region_mask_xr
+        region_mask_xr_b = region_mask_xr.broadcast_like(self.data['main'])
+        self.region_mask_xr = region_mask_xr # geographic mask
+        self.region_mask_xr_b = region_mask_xr_b # mask broadcast to time dim
 
     def _subset_data(self):    
 
-        for ds in ['main', 'min', 'max', 'areacello']:
+        for ds in ['main', 'min', 'max']:
+            print('Subsetting for %s' % ds)
             try:
+                print(self.data[ds])
                 self.data[ds] = self.data[ds].where(self.region_mask_xr, drop=True)
+                print(self.data[ds])
             except KeyError:
                 print('No %s data found for %s so no mask applied' % (ds, self.dataset))
+
+            # Now try for areacello which needs an unbroadcast mask
+            if 'areacello' in self.data:
+                print('Subsetting for areacello')
+                try:
+                    print(self.data['areacello'])
+                    self.data['areacello'] = self.data['areacello'].where(self.region_mask_xr, drop=True)
+                    print(self.data['areacello'])
+                except KeyError:
+                    print('No areacello data found for %s so no mask applied' % (self.dataset))
 
 
         # data_main = self.data['main'].where(region_mask_xr, drop=True)

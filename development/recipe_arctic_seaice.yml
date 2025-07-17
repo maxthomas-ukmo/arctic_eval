@@ -126,9 +126,9 @@ diagnostics:
         script: /home/users/max.thomas/projects/esmvaltool/development/diag_scripts/arctic_seaice.py
         dummy_plot: False
         variables_to_plot: [siconc] #, sivol]
-        model_datasets: [HadGEM3-GC31-LL, HadGEM3-GC31-MM]
+        model_datasets: [HadGEM3-GC31-LL] #, HadGEM3-GC31-MM]
         obs_datasets: [] # [HadISST]
-        regions: ['EB', 'AB']
+        regions: ['Arctic', 'EB', 'AB']
 
   # maps:
   #   description: Maps of March and September sea-ice concentration
