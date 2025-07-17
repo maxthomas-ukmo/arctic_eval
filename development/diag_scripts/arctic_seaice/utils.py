@@ -38,19 +38,29 @@ class Loader():
             # Replace OBS alias with dataset name if needed
             self.replace_obs_alias()
         
-        # If there is a region passed, we mask the data to that region at this stage, before passing to the plot functions
+        # If it has been passed as a file, load areacello data to data['areacello']
+        self._get_areacello()
+            
+        # Make region mask
         self.region = region
-        print('FFFFFFFFF')
-        print(region)
-        if not self.region is None:
-            print('Subsetting to region %s' % self.region)
-            self.subset_region()
+        self._make_region_mask()
 
+        # Subset data to region if needed
+        if self.region is not None:
+            print(f'Region is %s, so subsetting.' % self.region)
+            self._subset_data()
+        else:
+            print('No region specified, so not subsetting data.')
+
+        
+    def _get_areacello(self):
         try:
             self.data['areacello'] = self.get_area_data()
+            self.area = True
         except KeyError:
             print('No areacello data found for %s' % self.dataset)
             self.data['areacello'] = None 
+            self.area = False
         
     def get_input_files(self):
         raw_input_files = []
@@ -155,7 +165,7 @@ class Loader():
         elif 'HadGEM' in self.dataset: # HadGEM time variable needs converting
             self.plot_time = convert_cftime_to_datetime(self.data['main']['time'].values)
 
-    def subset_region(self):
+    def _make_region_mask(self):
         region_mask = make_region_mask(self.region, self.data['main']['lon'], self.data['main']['lat'])
         # Subset the data to the region mask
 
@@ -166,9 +176,19 @@ class Loader():
         )
         region_mask_xr = region_mask_xr.broadcast_like(self.data['main'])
 
+        self.region_mask_xr = region_mask_xr
 
-        data_main = self.data['main'].where(region_mask_xr, drop=True)
-        self.data['main'] = data_main
+    def _subset_data(self):    
+
+        for ds in ['main', 'min', 'max', 'areacello']:
+            try:
+                self.data[ds] = self.data[ds].where(self.region_mask_xr, drop=True)
+            except KeyError:
+                print('No %s data found for %s so no mask applied' % (ds, self.dataset))
+
+
+        # data_main = self.data['main'].where(region_mask_xr, drop=True)
+        # self.data['main'] = data_main
         # if 'min' in self.data:
         #     self.data['min'] = self.data['min'].where(region_mask_xr, drop=True)
         #     self.data['max'] = self.data['max'].where(region_mask_xr, drop=True)
