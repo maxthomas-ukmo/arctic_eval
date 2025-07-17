@@ -8,35 +8,45 @@ import xarray as xr
 from esmvaltool.diag_scripts.shared import ProvenanceLogger
 
 class Loader():
-    ''' Load data from preprocessed esmvaltool .nc files.
-
-    Keyword arguments:
-    input_data (dict) -- dictionary of input data
-    dataset (str) -- dataset name (dataset name from ESGF)
-    variable (str) -- variable name (short CMOR name)
-    aliases (list) -- list of aliases for the various dataset entries (i.e. ['Mean', 'Min', 'Max']) (default [None])
     '''
-    def __init__(self, input_data, dataset, variable, aliases=[None], debug_string='SeasonalCycle', region=None):
-        print('In Loader.__init__')
+    Loader class to load data passed by ESMValTool recipe.
+
+    The loader is designed to be inherited by classes that need to load data for plotting or analysis.
+
+    Data are loaded, and subset to a region if specified. Areacello data are also loaded and subset if passed by the recipe.
+
+    Further processing (i.e. multiplying by area) is done in the inheriting class.
+
+    Args:
+        input_data (dict): Dictionary containing the input data.
+        dataset (str): Dataset name (e.g. HadGEM3-GC31-LL).
+        variable (str): Variable name (e.g. siconc).
+        aliases (list): List of aliases for the various dataset entries (i.e. ['Mean', 'Min', 'Max']) (default [None]).
+        called_by (str): Name of the class that called the loader (default 'SeasonalCycle').
+        region (str): Region to subset the data to (default None). If None, we subset to the whole Arctic.
+
+    '''
+    def __init__(self, input_data, dataset, variable, aliases=[None], called_by='SeasonalCycle', region=None):
+        print('Initialising loader')
         # Read arguments into self
         self.input_data = input_data
         self.variable = variable
         self.dataset = dataset
         self.aliases = aliases
-        self.debug_string = debug_string
+        self.called_by = called_by
         # Add alternate variable name if needed
-        self.alternate_variable = self.add_alternate_variable()
+        self.alternate_variable = self._add_alternate_variable()
         # Get required file names in a useful dict and save a list for provenance logging
-        self.input_files, self.provenance_list = self.get_input_files()
+        self.input_files, self.provenance_list = self._get_input_file()
         # Load data into self.data
         if not self.input_files is None:
-            self.load_data()
+            self._load_data()
             # Update observational data if needed
-            self.update_obs_data()
+            self._update_obs_data()
             # Rename variable if needed
-            self.rename_variable()
+            self._rename_variable()
             # Replace OBS alias with dataset name if needed
-            self.replace_obs_alias()
+            self._replace_obs_alias()
         
         # If it has been passed as a file, load areacello data to data['areacello']
         self._get_areacello()
@@ -47,22 +57,48 @@ class Loader():
 
         # Subset data to region if needed
         if self.region is not None:
-            print(f'Region is %s, so subsetting.' % self.region)
             self._subset_data()
-        else:
-            print('No region specified, so not subsetting data.')
 
+        # Print loader summary
+        self._print_summary()
+
+    def _print_summary(self):
+        '''Print a summary of the loader.'''
+        print('Loader summary:')
+        print('Called by: %s' % self.called_by)
+        print('Dataset: %s' % self.dataset)
+        print('Variable: %s' % self.variable)
+        print('Aliases: %s' % self.aliases)
+        print('Input files: %s' % self.input_files)
+        if 'areacello' in self.data:
+            print('Areacello data found.')
+        else:
+            print('No areacello data found.')
+        if self.region is not None:
+            print('Region: %s' % self.region)
+        else:
+            print('No region specified.')
         
     def _get_areacello(self):
+        '''Load areacello data for the specified dataset if it has been passed.'''
         try:
-            self.data['areacello'] = self.get_area_data()
+            self.data['areacello'] = self._get_area_data()
             self.area = True
         except KeyError:
             print('No areacello data found for %s' % self.dataset)
             self.data['areacello'] = None 
             self.area = False
         
-    def get_input_files(self):
+    def _get_input_file(self):
+        '''
+        Get input files for the specified dataset and variable, and return a dictionary of input files and a list of provenance entries.
+        
+        The input files are selected based on the aliases provided. If no data is found, None is returned. 
+        Aliases could be a statistic name (i.e. Mean), OBS to indicate observational data, or some other flag.
+        Aliases appear in the filename of the netcdfs produced by valtool.
+        '''
+
+        # Find the required files
         raw_input_files = []
         used_aliases = []
         for alias in self.aliases:
@@ -70,23 +106,29 @@ class Loader():
             raw_input_file = select_input_data_entry(self.input_data, self.dataset, self.variable, alias)
             if raw_input_file is not None:
                 raw_input_files.append(raw_input_file)
-                print('%s: Data found for %s %s %s' % (self.debug_string, self.dataset, self.variable, alias))
+                print('%s: Data found for %s %s %s' % (self.called_by, self.dataset, self.variable, alias))
             else:
-                print('%s: No data found for %s %s %s' % (self.debug_string, self.dataset, self.variable, alias))
+                print('%s: No data found for %s %s %s' % (self.called_by, self.dataset, self.variable, alias))
 
+        # If there are no file, flag an error
         if len(raw_input_files) == 0:
             input_files = None
             provenance_list = []
-            print('Data Loading Error: get_input_files returned None')
+            print('Data Loading Error: _get_input_file returned None')
             print('These were the input_data:')
             print(self.input_data)
+
+        # Else if there is only one file we assume that's the main data
         elif len(raw_input_files) == 1:
             input_files = {'main': {'file': raw_input_files[0], 'alias': used_aliases[0]}}
             provenance_list = raw_input_files
+
+        # Otherwise we store the input files based on their individual aliases
         else:
             input_files = {}
             provenance_list = []
             for raw_input_file, alias in zip(raw_input_files, used_aliases):
+                
                 if 'Mean' in raw_input_file:
                     input_files['main'] = {'file': raw_input_file, 'alias': alias}
                 elif 'Min' in raw_input_file:
@@ -95,20 +137,24 @@ class Loader():
                     input_files['max'] = {'file': raw_input_file, 'alias': alias}
                 else:
                     input_files[alias] = {'file': raw_input_file, 'alias': alias}
+               
                 provenance_list.append(raw_input_file)
+
         return input_files, provenance_list
     
-    def get_area_data(self):
+    def _get_area_data(self):
+        ''' Get areacello data, or not.'''
         for key in self.input_data:
             data = self.input_data[key]
             if data['dataset'] == self.dataset and data['short_name'] == 'areacello':
                 area_file = key
-                print('88888888888888888888888')
-                print(area_file)
-                print(xr.open_dataset(area_file)['areacello'])
-        return xr.open_dataset(area_file)['areacello']
+        if area_file is None:
+            print('No areacello data found for %s' % self.dataset)
+            return None
+        else:
+            return xr.open_dataset(area_file)['areacello']
         
-    def load_data(self):
+    def _load_data(self):
         ''' Load data from input files into self.data.
         '''
         if self.input_files is None:
@@ -127,7 +173,7 @@ class Loader():
             print('Use case for more than three files in seasonal cycle not defined')
 
     
-    def add_alternate_variable(self):
+    def _add_alternate_variable(self):
         ''' Add alternate variable name if needed because of incomplete cmorization.'''
         # sicon HadISST is names sic in HadISST
         if self.dataset == 'HadISST' and self.variable == 'siconc':
@@ -138,7 +184,7 @@ class Loader():
         else:
             return self.variable
         
-    def update_obs_data(self):
+    def _update_obs_data(self):
         ''' If we need to, update observational data.'''
         if self.dataset == 'PIOMAS':
             # PIOMAS contains thickness data, so multiply by area to get volume
@@ -147,31 +193,38 @@ class Loader():
                 self.data['area'] = xr.open_dataset(piomas_area_file)['areacello']
                 self.data['main'] = self.data['main'] * self.data['area']
                
-    def rename_variable(self):
+    def _rename_variable(self):
         ''' Rename variable if needed because of incomplete cmorization.'''
         if self.dataset == 'HadISST' and self.variable == 'siconc':
             self.data['main'] = self.data['main'].rename('sic') # I think this should rename to siconc
         if self.dataset == 'PIOMAS' and self.variable == 'sivol':
             self.data['main'] = self.data['main'].rename('sivol')
         
-    def replace_obs_alias(self):
+    def _replace_obs_alias(self):
         ''' Replace OBS alias with dataset name, or do nothing for model dataset.'''
         if self.input_files['main']['alias'] == 'OBS':
             self.input_files['main']['alias'] = self.dataset
 
-    def make_timeseries_xaxis(self):
+    def _make_timeseries_xaxis(self):
+        ''' Make the time variable for plotting.'''
         if self.dataset == 'HadISST': # HadISST time variable will plot fine
             self.plot_time = self.data['main']['time'].values
         elif 'HadGEM' in self.dataset: # HadGEM time variable needs converting
             self.plot_time = convert_cftime_to_datetime(self.data['main']['time'].values)
 
     def _make_region_mask(self):
+        ''' 
+        Make a region mask for the specified region.
+        
+        The numpy array mask is broadcast to an xarray DataArray with the same dimensions as the data.
+        Two versions are needed, one bradcast to time dims and one not (for areacello).
+        '''
+        # This work is done by a function external to the loader
         region_mask = make_region_mask(self.region, self.data['main']['lon'], self.data['main']['lat'])
-        # Subset the data to the region mask
 
         region_mask_xr = xr.DataArray(
         region_mask,
-        dims=('j', 'i'),  # or whatever your spatial dims are called
+        dims=('j', 'i'),  
         coords={'i': self.data['main']['i'], 'j': self.data['main']['j']}
         )
         region_mask_xr_b = region_mask_xr.broadcast_like(self.data['main'])
@@ -179,32 +232,20 @@ class Loader():
         self.region_mask_xr_b = region_mask_xr_b # mask broadcast to time dim
 
     def _subset_data(self):    
-
+        ''' Subset data to the specified region using the region mask.'''
         for ds in ['main', 'min', 'max']:
-            print('Subsetting for %s' % ds)
             try:
-                print(self.data[ds])
                 self.data[ds] = self.data[ds].where(self.region_mask_xr, drop=True)
-                print(self.data[ds])
             except KeyError:
                 print('No %s data found for %s so no mask applied' % (ds, self.dataset))
 
             # Now try for areacello which needs an unbroadcast mask
             if 'areacello' in self.data:
-                print('Subsetting for areacello')
                 try:
-                    print(self.data['areacello'])
                     self.data['areacello'] = self.data['areacello'].where(self.region_mask_xr, drop=True)
-                    print(self.data['areacello'])
                 except KeyError:
                     print('No areacello data found for %s so no mask applied' % (self.dataset))
 
-
-        # data_main = self.data['main'].where(region_mask_xr, drop=True)
-        # self.data['main'] = data_main
-        # if 'min' in self.data:
-        #     self.data['min'] = self.data['min'].where(region_mask_xr, drop=True)
-        #     self.data['max'] = self.data['max'].where(region_mask_xr, drop=True)
 
 def get_format_properties(plot_formatting='/home/users/max.thomas/projects/esmvaltool/development/plot_formatting.yml', properties=['colour']):
     '''Reads format properties from a YAML file.
