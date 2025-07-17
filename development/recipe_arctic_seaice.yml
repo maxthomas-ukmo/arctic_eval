@@ -21,7 +21,8 @@ documentation:
 
 # Model problems
 datasets:
-  - {dataset: HadGEM3-GC31-LL, project: CMIP6, mip: SImon, exp: historical, ensemble: r*i1p1f3, grid: gn}
+  - {dataset: HadGEM3-GC31-LL, project: CMIP6}
+#  - {dataset: HadGEM3-GC31-LL, project: CMIP6, mip: SImon, exp: historical, ensemble: r*i1p1f3, grid: gn}
 #  - {dataset: HadGEM3-GC31-MM, project: CMIP6, mip: SImon, exp: historical, ensemble: r*i1p1f3, grid: gn}
 
 preprocessors:
@@ -40,6 +41,25 @@ preprocessors:
       period: month
     area_statistics:
       operator: sum
+    multi_model_statistics:
+      span: full
+      statistics: [mean, min, max]
+      groupby: [dataset]
+
+  # monthly means for each gridcell in arctic
+  arctic_gs_monthmean:
+    # extract Arctic
+    <<: *extract_whole_arctic_preprocessor
+    # # get gridcell areas
+    # derive:
+    #   units: m2
+    #   short_name: areacello
+    #   long_name: Ocean Grid-Cell Area
+    # take month means
+    climate_statistics:
+      operator: mean
+      period: month
+    # get ensemble statistics for single model
     multi_model_statistics:
       span: full
       statistics: [mean, min, max]
@@ -71,50 +91,62 @@ preprocessors:
       
     
 diagnostics:
-  # seasonal_cycle:
-  #   description: Seasonal cycle of integrated sea-ice area
-  #   variables:
-  #     siconc: &variable
-  #       start_year: 1979
-  #       end_year: 1982
-  #       preprocessor: whole_arctic_sum
-  #       #convert_units: 1e6 km2
-  #       additional_datasets:
-  #         -  {dataset: HadISST, project: OBS, mip: OImon, tier: 2, type: reanaly, version: 1}
-  #     # sivol: 
-  #     #   start_year: 1979
-  #     #   end_year: 2000
-  #     #   preprocessor: whole_arctic_sum
-  #     #   #convert_units: 1e6 km2
-  #     #   additional_datasets:
-  #     #     - {dataset: PIOMAS, project: OBS, mip: day, tier: 2, type: reanaly, version: 2.1, short_name: sithick, preprocessor: extract_whole_arctic}
-  #     #     - {dataset: PIOMAS, project: OBS, mip: fx, tier: 2, type: reanaly, version: 2.1, short_name: areacello, preprocessor: extract_whole_arctic}
-  #   scripts:
-  #     seasonal_cycle:
-  #       script: /home/users/max.thomas/projects/esmvaltool/development/diag_scripts/arctic_seaice.py
-  #       dummy_plot: False
-  #       variables_to_plot: [siconc] #, sivol]
-  #       model_datasets: [HadGEM3-GC31-LL, HadGEM3-GC31-MM]
-  #       obs_datasets: [HadISST]
-
-  maps:
-    description: Maps of March and September sea-ice concentration
+  seasonal_cycle:
+    description: Seasonal cycle of integrated sea-ice area
     variables:
-      siconc: 
+      siconc: &variable
+        mip: SImon
+        exp: historical
+        ensemble: r*i1p1f3
+        grid: gn
         start_year: 1979
-        end_year: 2000
-        preprocessor: 2D_map
-        additional_datasets:
-        -  {dataset: HadISST, project: OBS, mip: OImon, tier: 2, type: reanaly, version: 1} 
+        end_year: 1982
+        #preprocessor: whole_arctic_sum # this does the summing for the region passed to the preprocessor
+        preprocessor: arctic_gs_monthmean # this excludes the sum
+        #convert_units: 1e6 km2
+        # additional_datasets:
+        #   -  {dataset: HadISST, project: OBS, mip: OImon, tier: 2, type: reanaly, version: 1}
+      areacello:
+        mip: Ofx
+        grid: gn
+        exp: piControl
+        ensemble: r1i1p1f1
+        preprocessor: extract_whole_arctic
+      # sivol: 
+      #   start_year: 1979
+      #   end_year: 2000
+      #   preprocessor: whole_arctic_sum
+      #   #convert_units: 1e6 km2
+      #   additional_datasets:
+      #     - {dataset: PIOMAS, project: OBS, mip: day, tier: 2, type: reanaly, version: 2.1, short_name: sithick, preprocessor: extract_whole_arctic}
+      #     - {dataset: PIOMAS, project: OBS, mip: fx, tier: 2, type: reanaly, version: 2.1, short_name: areacello, preprocessor: extract_whole_arctic}
     scripts:
-      geo_map_march_sept:
+      seasonal_cycle:
         script: /home/users/max.thomas/projects/esmvaltool/development/diag_scripts/arctic_seaice.py
         dummy_plot: False
-        variables_to_plot: [siconc]
-        regions: ['EB', 'AB', 'Barents_sea', 'Arctic']
+        variables_to_plot: [siconc] #, sivol]
         model_datasets: [HadGEM3-GC31-LL] #, HadGEM3-GC31-MM]
         obs_datasets: [] # [HadISST]
-        months: [3, 9]        
+        regions: ['EB', 'AB']
+
+  # maps:
+  #   description: Maps of March and September sea-ice concentration
+  #   variables:
+  #     siconc: 
+  #       start_year: 1979
+  #       end_year: 2000
+  #       preprocessor: 2D_map
+  #       additional_datasets:
+  #       -  {dataset: HadISST, project: OBS, mip: OImon, tier: 2, type: reanaly, version: 1} 
+  #   scripts:
+  #     geo_map_march_sept:
+  #       script: /home/users/max.thomas/projects/esmvaltool/development/diag_scripts/arctic_seaice.py
+  #       dummy_plot: False
+  #       variables_to_plot: [siconc]
+  #       regions: ['EB', 'AB', 'Barents_sea', 'Arctic']
+  #       model_datasets: [HadGEM3-GC31-LL] #, HadGEM3-GC31-MM]
+  #       obs_datasets: [] # [HadISST]
+  #       months: [3, 9]        
 
   # timeseries:
   #   description: Time series of integrated sea-ice area
@@ -133,21 +165,21 @@ diagnostics:
   #       model_datasets: [HadGEM3-GC31-LL, HadGEM3-GC31-MM]
   #       obs_datasets: [HadISST]
           
-  region_plot:
-    description: Regions used for subsetting
-    variables:
-      siconc: 
-        start_year: 1979
-        end_year: 2000
-        preprocessor: extract_whole_arctic
-        additional_datasets:
-        -  {dataset: HadISST, project: OBS, mip: OImon, tier: 2, type: reanaly, version: 1}
-    scripts:
-      regions:
-        script: /home/users/max.thomas/projects/esmvaltool/development/diag_scripts/arctic_seaice.py
-        dummy_plot: False
-        variables_to_plot: [siconc]
-        regions: ['EB', 'AB', 'Barents_sea']
-        region_centers: [[85,0], [85, 180], [75, 40]]
-        model_datasets: [HadGEM3-GC31-LL] #, HadGEM3-GC31-MM]
-        obs_datasets: [HadISST]
+  # region_plot:
+  #   description: Regions used for subsetting
+  #   variables:
+  #     siconc: 
+  #       start_year: 1979
+  #       end_year: 2000
+  #       preprocessor: extract_whole_arctic
+  #       additional_datasets:
+  #       -  {dataset: HadISST, project: OBS, mip: OImon, tier: 2, type: reanaly, version: 1}
+  #   scripts:
+  #     regions:
+  #       script: /home/users/max.thomas/projects/esmvaltool/development/diag_scripts/arctic_seaice.py
+  #       dummy_plot: False
+  #       variables_to_plot: [siconc]
+  #       regions: ['EB', 'AB', 'Barents_sea']
+  #       region_centers: [[85,0], [85, 180], [75, 40]]
+  #       model_datasets: [HadGEM3-GC31-LL] #, HadGEM3-GC31-MM]
+  #       obs_datasets: [HadISST]

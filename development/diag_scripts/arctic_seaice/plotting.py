@@ -16,11 +16,25 @@ class SeasonalCycle(Loader):
     variable (str) -- variable name (short CMOR name)
     aliases (list) -- list of aliases for the various dataset entries (i.e. ['Mean', 'Min', 'Max']) (default [None])
     '''
-    def __init__(self, input_data, dataset, variable, aliases=[None]):
-        super().__init__(input_data, dataset, variable, aliases)
+    def __init__(self, input_data, dataset, variable, aliases=[None], region=None):
+        super().__init__(input_data, dataset, variable, aliases, region=region)
         print('CCCCCCCCCCCCCC')
         print(self.input_files)
         print('CCCCCCCCCCCCCC')
+
+        # Multiply through by area
+        if self.variable == 'siconc':
+            print('Multiplying siconc by areacello to get seaice area')
+            self.data['main'] = self.data['main'] * self.data['areacello']
+            if 'min' in self.data:
+                self.data['min'] = self.data['min'] * self.data['areacello']
+                self.data['max'] = self.data['max'] * self.data['areacello']
+
+        # Sum over i, j
+        self.data['main'] = self.data['main'].sum(dim=['i', 'j'])
+        if 'min' in self.data:
+            self.data['min'] = self.data['min'].sum(dim=['i', 'j'])
+            self.data['max'] = self.data['max'].sum(dim=['i', 'j'])
 
     def plot(self, ax, line_parameters=None, add_labels=True):
         ''' Plot the seasonal cycle data.

@@ -196,7 +196,7 @@ def plot_seasonal_cycles(cfg):
             colour = formatting['dataset'][dataset]['colour']
             try:
                 # Create seasonal cycle object for dataset and variable
-                seasonal_cycle = SeasonalCycle(input_data, dataset, variable, aliases=[dataset+'Mean', dataset+'Min', dataset+'Max'], region=region)
+                seasonal_cycle = SeasonalCycle(input_data, dataset, variable, aliases=[dataset+'Mean', dataset+'Min', dataset+'Max'], region=None)
                 # Plot seasonal cycle to axes for that variable
                 seasonal_cycle.plot(ax, line_parameters={'colour': colour})
                 # Add ancestors to provenance record
@@ -211,7 +211,7 @@ def plot_seasonal_cycles(cfg):
                 colour = formatting['dataset'][dataset]['colour']
                 try:
                     # Create seasonal cycle object for observational dataset and variable
-                    seasonal_cycle = SeasonalCycle(input_data, dataset, variable, aliases=['OBS'], region=region)
+                    seasonal_cycle = SeasonalCycle(input_data, dataset, variable, aliases=['OBS'], region=None)
                     # Plot seasonal cycle to axes for that variable                 
                     seasonal_cycle.plot(ax, line_parameters={'colour': colour})
                     # Add ancestors to provenance record

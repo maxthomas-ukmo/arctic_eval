@@ -17,6 +17,7 @@ class Loader():
     aliases (list) -- list of aliases for the various dataset entries (i.e. ['Mean', 'Min', 'Max']) (default [None])
     '''
     def __init__(self, input_data, dataset, variable, aliases=[None], debug_string='SeasonalCycle', region=None):
+        print('In Loader.__init__')
         # Read arguments into self
         self.input_data = input_data
         self.variable = variable
@@ -44,6 +45,12 @@ class Loader():
         if not self.region is None:
             print('Subsetting to region %s' % self.region)
             self.subset_region()
+
+        try:
+            self.data['areacello'] = self.get_area_data()
+        except KeyError:
+            print('No areacello data found for %s' % self.dataset)
+            self.data['areacello'] = None 
         
     def get_input_files(self):
         raw_input_files = []
@@ -80,6 +87,16 @@ class Loader():
                     input_files[alias] = {'file': raw_input_file, 'alias': alias}
                 provenance_list.append(raw_input_file)
         return input_files, provenance_list
+    
+    def get_area_data(self):
+        for key in self.input_data:
+            data = self.input_data[key]
+            if data['dataset'] == self.dataset and data['short_name'] == 'areacello':
+                area_file = key
+                print('88888888888888888888888')
+                print(area_file)
+                print(xr.open_dataset(area_file)['areacello'])
+        return xr.open_dataset(area_file)['areacello']
         
     def load_data(self):
         ''' Load data from input files into self.data.
