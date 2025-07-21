@@ -1,4 +1,5 @@
 import xarray as xr
+import iris
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import numpy as np
@@ -24,6 +25,8 @@ class SeasonalCycle(Loader):
         print('With region %s' % self.region)
         print('With aliases for datasets %s' % self.aliases)
 
+        print(self.data['main'])
+
         # Processing steps for siconc processing
         if self.variable == 'siconc':
             self._multiply_by_area()
@@ -31,16 +34,22 @@ class SeasonalCycle(Loader):
 
         print('22222222222222222222222222')
         print(self.data['main'])
+        print(self.data['main'].data)
         print('22222222222222222222222222')
 
 
     def _multiply_by_area(self):
         print('Multiplying %s by areacello.' % self.variable)
-        self.data['main'] = self.data['main'] * self.data['areacello']
+        # self.data['main'] = self.data['main'] * self.data['areacello']
+        self.data['main'].data = self.data['main'].data * self.data['areacello'].data
         if 'min' in self.data:
-            self.data['min'] = self.data['min'] * self.data['areacello']
-            self.data['max'] = self.data['max'] * self.data['areacello']
+            self.data['min'].data = self.data['min'].data * self.data['areacello'].data
+            self.data['max'].data = self.data['max'].data * self.data['areacello'].data
+        #     self.data['min'] = self.data['min'] * self.data['areacello']
+        #     self.data['max'] = self.data['max'] * self.data['areacello']
         self.multiplied_by_area = True
+        print('33333333333333333333')
+        print(self.data['main'])
 
     def _sum_over_area(self):
         print('Summing %s over area.' % self.variable)
@@ -49,10 +58,15 @@ class SeasonalCycle(Loader):
         else:
             print('Data were not multiplied through by area prior to summing.')
 
-        self.data['main'] = self.data['main'].sum(dim=['i', 'j'])
+        # self.data['main'] = self.data['main'].sum(dim=['i', 'j'])
+        self.data['main'] = self.data['main'].collapsed(['latitude', 'longitude'], iris.analysis.SUM)
         if 'min' in self.data:
-            self.data['min'] = self.data['min'].sum(dim=['i', 'j'])
-            self.data['max'] = self.data['max'].sum(dim=['i', 'j'])
+            self.data['min'] = self.data['min'].collapsed(['latitude', 'longitude'], iris.analysis.SUM)
+            self.data['max'] = self.data['max'].collapsed(['latitude', 'longitude'], iris.analysis.SUM)
+            # self.data['min'] = self.data['min'].sum(dim=['i', 'j'])
+            # self.data['max'] = self.data['max'].sum(dim=['i', 'j'])
+        print('44444444444444444')
+        print(self.data['main'])
 
 
     def plot(self, ax, line_parameters=None, add_labels=True):
@@ -66,16 +80,18 @@ class SeasonalCycle(Loader):
         print('Plotting: SeasonalCycle: plot: ')
         print(self.plot_type)
 
+        xvar = self.data['main'].coord('month_number').points
+
         if line_parameters is None:
             colour = 'k'
         else:
             colour = line_parameters['colour']
         if self.plot_type == 'single':
-            ax.plot(self.data['main']['month_number'], self.data['main'], colour, label=self.input_files['main']['alias'])
+            ax.plot(xvar, self.data['main'].data, colour, label=self.input_files['main']['alias'])
             print(self.data['main'])
         elif self.plot_type == 'range':
-            ax.plot(self.data['main']['month_number'], self.data['main'], '-' + colour, label=self.input_files['main']['alias'])
-            ax.fill_between(self.data['main']['month_number'], self.data['min'], self.data['max'], color=colour, alpha=0.2)
+            ax.plot(xvar, self.data['main'].data, '-' + colour, label=self.input_files['main']['alias'])
+            ax.fill_between(xvar, self.data['min'].data, self.data['max'].data, color=colour, alpha=0.2)
         elif self.plot_type == 'no_data':
             print('No data found for %s %s' % (self.dataset, self.variable))
         else:

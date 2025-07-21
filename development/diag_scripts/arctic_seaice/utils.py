@@ -3,7 +3,8 @@ import yaml
 import datetime
 
 import numpy as np
-import xarray as xr
+#import xarray as xr
+import iris
 
 from esmvaltool.diag_scripts.shared import ProvenanceLogger
 
@@ -152,7 +153,8 @@ class Loader():
             print('No areacello data found for %s' % self.dataset)
             return None
         else:
-            return xr.open_dataset(area_file)['areacello']
+            # return xr.open_dataset(area_file)['areacello']
+            return iris.load_cube(area_file)
         
     def _load_data(self):
         ''' Load data from input files into self.data.
@@ -161,12 +163,13 @@ class Loader():
             print('No data found for %s %s' % (self.dataset, self.variable))
             self.plot_type = 'no_data'
         elif len(self.input_files) == 1:
-            self.data = {'main': xr.open_dataset(self.input_files['main']['file'])[self.alternate_variable]}
+            #self.data = {'main': xr.open_dataset(self.input_files['main']['file'])[self.alternate_variable]}
+            self.data = {'main': iris.load_cube(self.input_files['main']['file'])}
             self.plot_type = 'single'
         elif len(self.input_files) == 3:
-            self.data = {'main': xr.open_dataset(self.input_files['main']['file'])[self.variable],
-                         'min': xr.open_dataset(self.input_files['min']['file'])[self.variable],
-                         'max': xr.open_dataset(self.input_files['max']['file'])[self.variable]}
+            self.data = {'main': iris.load_cube(self.input_files['main']['file']),
+                         'min': iris.load_cube(self.input_files['min']['file']),
+                         'max': iris.load_cube(self.input_files['max']['file'])}
             self.plot_type = 'range'
             print(self.data['main'])
         else:
@@ -190,7 +193,7 @@ class Loader():
             # PIOMAS contains thickness data, so multiply by area to get volume
             if self.variable == 'sivol':
                 piomas_area_file = select_input_data_entry(self.input_data, 'PIOMAS', 'areacello', 'OBS')
-                self.data['area'] = xr.open_dataset(piomas_area_file)['areacello']
+                self.data['area'] = iris.load_cube(piomas_area_file)['areacello']
                 self.data['main'] = self.data['main'] * self.data['area']
                
     def _rename_variable(self):
@@ -220,29 +223,36 @@ class Loader():
         Two versions are needed, one bradcast to time dims and one not (for areacello).
         '''
         # This work is done by a function external to the loader
-        region_mask = make_region_mask(self.region, self.data['main']['lon'], self.data['main']['lat'])
+        #region_mask = make_region_mask(self.region, self.data['main']['lon'], self.data['main']['lat'])
+        region_mask = make_region_mask(self.region, self.data['main'].coord('longitude').points, self.data['main'].coord('latitude').points)
 
-        region_mask_xr = xr.DataArray(
-        region_mask,
-        dims=('j', 'i'),  
-        coords={'i': self.data['main']['i'], 'j': self.data['main']['j']}
-        )
-        region_mask_xr_b = region_mask_xr.broadcast_like(self.data['main'])
-        self.region_mask_xr = region_mask_xr # geographic mask
-        self.region_mask_xr_b = region_mask_xr_b # mask broadcast to time dim
+        region_mask_b = np.broadcast_to(region_mask, self.data['main'].data.shape)
+
+        self.region_mask, self.region_mask_b = region_mask, region_mask_b
+
+        # region_mask_xr = xr.DataArray(
+        # region_mask,
+        # dims=('j', 'i'),  
+        # coords={'i': self.data['main']['i'], 'j': self.data['main']['j']}
+        # )
+        # region_mask_xr_b = region_mask_xr.broadcast_like(self.data['main'])
+        # self.region_mask_xr = region_mask_xr # geographic mask
+        # self.region_mask_xr_b = region_mask_xr_b # mask broadcast to time dim
 
     def _subset_data(self):    
         ''' Subset data to the specified region using the region mask.'''
         for ds in ['main', 'min', 'max']:
             try:
-                self.data[ds] = self.data[ds].where(self.region_mask_xr, drop=True)
+                #self.data[ds] = self.data[ds].where(self.region_mask_b, drop=True)
+                self.data[ds].data = np.ma.masked_where(~self.region_mask_b, self.data[ds].data)
             except KeyError:
                 print('No %s data found for %s so no mask applied' % (ds, self.dataset))
 
             # Now try for areacello which needs an unbroadcast mask
             if 'areacello' in self.data:
                 try:
-                    self.data['areacello'] = self.data['areacello'].where(self.region_mask_xr, drop=True)
+                    # self.data['areacello'] = self.data['areacello'].where(self.region_mask_b, drop=True)
+                    self.data['areacello'].data = np.ma.masked_where(~self.region_mask, self.data['areacello'].data)
                 except KeyError:
                     print('No areacello data found for %s so no mask applied' % (self.dataset))
 
