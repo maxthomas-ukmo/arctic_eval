@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import numpy as np
 
+from esmvalcore.preprocessor import area_statistics
+
 import arctic_seaice.utils as utils
 
 from arctic_seaice.utils import Loader
@@ -41,30 +43,30 @@ class SeasonalCycle(Loader):
     def _multiply_by_area(self):
         print('Multiplying %s by areacello.' % self.variable)
         # self.data['main'] = self.data['main'] * self.data['areacello']
-        self.data['main'].data = self.data['main'].data * self.data['areacello'].data
-        if 'min' in self.data:
-            self.data['min'].data = self.data['min'].data * self.data['areacello'].data
-            self.data['max'].data = self.data['max'].data * self.data['areacello'].data
-        #     self.data['min'] = self.data['min'] * self.data['areacello']
-        #     self.data['max'] = self.data['max'] * self.data['areacello']
-        self.multiplied_by_area = True
+        if self.dataset == 'HadISST':
+            print('SeasonalCycle, _multiply_by_area: passing as HadISST does not have areacello')
+            self.multiplied_by_area = False
+        else:
+            self.data['main'].data = self.data['main'].data * self.data['areacello'].data
+            if 'min' in self.data:
+                self.data['min'].data = self.data['min'].data * self.data['areacello'].data
+                self.data['max'].data = self.data['max'].data * self.data['areacello'].data
+            self.multiplied_by_area = True
         print('33333333333333333333')
         print(self.data['main'])
 
     def _sum_over_area(self):
         print('Summing %s over area.' % self.variable)
-        if self.multiplied_by_area:
-            print('Data were multiplied through by area prior to summing.')
+        if self.dataset == 'HadISST':
+            print('SeasonalCycle, _sum_over_area: summing and multiplying by area simultaneously as HadISST has no areacello')
+            self.data['main'] = area_statistics(self.data['main'], operator='sum')
+            self.multiplied_by_area = True
         else:
-            print('Data were not multiplied through by area prior to summing.')
+            self.data['main'] = self.data['main'].collapsed(['latitude', 'longitude'], iris.analysis.SUM)
+            if 'min' in self.data:
+                self.data['min'] = self.data['min'].collapsed(['latitude', 'longitude'], iris.analysis.SUM)
+                self.data['max'] = self.data['max'].collapsed(['latitude', 'longitude'], iris.analysis.SUM)
 
-        # self.data['main'] = self.data['main'].sum(dim=['i', 'j'])
-        self.data['main'] = self.data['main'].collapsed(['latitude', 'longitude'], iris.analysis.SUM)
-        if 'min' in self.data:
-            self.data['min'] = self.data['min'].collapsed(['latitude', 'longitude'], iris.analysis.SUM)
-            self.data['max'] = self.data['max'].collapsed(['latitude', 'longitude'], iris.analysis.SUM)
-            # self.data['min'] = self.data['min'].sum(dim=['i', 'j'])
-            # self.data['max'] = self.data['max'].sum(dim=['i', 'j'])
         print('44444444444444444')
         print(self.data['main'])
 
@@ -178,8 +180,19 @@ class Timeseries(Loader):
     def __init__(self, input_data, dataset, variable, aliases=[None]):
         super().__init__(input_data, dataset, variable, aliases)
         # Make time axis
-        self.make_timeseries_xaxis()
-        
+        self._make_timeseries_xaxis()
+
+        print('TSTSTSTSTS')
+        print(self.data['main'])
+        print('TSTSTSTST')
+
+    def _make_timeseries_xaxis(self):
+        ''' Make the time variable for plotting.'''
+        if self.dataset == 'HadISST': # HadISST time variable will plot fine
+            self.plot_time = self.data['main'].coords('time').points
+        elif 'HadGEM' in self.dataset: # HadGEM time variable needs converting
+            self.plot_time = utils.convert_cftime_to_datetime(self.data['main'].coords('time').points)
+
     def plot(self, ax, line_parameters=None, add_labels=True):
         ''' Plot the timeseries data.
         

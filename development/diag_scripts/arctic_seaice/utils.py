@@ -43,22 +43,36 @@ class Loader():
         if not self.input_files is None:
             self._load_data()
             # Update observational data if needed
+            print('PS - after load data')
+            print(self.data['main'])
             self._update_obs_data()
+            print('PS - after update obs data')
+            print(self.data['main'])
             # Rename variable if needed
             self._rename_variable()
+            print('PS - after rename')
+            print(self.data['main'])
             # Replace OBS alias with dataset name if needed
             self._replace_obs_alias()
+            print('PS - after replace obs alias')
+            print(self.data['main'])
         
         # If it has been passed as a file, load areacello data to data['areacello']
         self._get_areacello()
+        print('PS - after get areacello')
+        print(self.data['main'])
             
         # Make region mask
         self.region = region
         self._make_region_mask()
+        print('PS - after make region mask')
+        print(self.data['main'])
 
         # Subset data to region if needed
         if self.region is not None:
             self._subset_data()
+            print('PS - after subset data')
+            print(self.data['main'])
 
         # Print loader summary
         self._print_summary()
@@ -82,10 +96,11 @@ class Loader():
         
     def _get_areacello(self):
         '''Load areacello data for the specified dataset if it has been passed.'''
+        print('IN _get_areacello')
         try:
             self.data['areacello'] = self._get_area_data()
             self.area = True
-        except KeyError:
+        except:
             print('No areacello data found for %s' % self.dataset)
             self.data['areacello'] = None 
             self.area = False
@@ -165,6 +180,8 @@ class Loader():
         elif len(self.input_files) == 1:
             #self.data = {'main': xr.open_dataset(self.input_files['main']['file'])[self.alternate_variable]}
             self.data = {'main': iris.load_cube(self.input_files['main']['file'])}
+            print('1234567')
+            print(self.data['main'])
             self.plot_type = 'single'
         elif len(self.input_files) == 3:
             self.data = {'main': iris.load_cube(self.input_files['main']['file']),
@@ -199,7 +216,10 @@ class Loader():
     def _rename_variable(self):
         ''' Rename variable if needed because of incomplete cmorization.'''
         if self.dataset == 'HadISST' and self.variable == 'siconc':
-            self.data['main'] = self.data['main'].rename('sic') # I think this should rename to siconc
+            #TODO: test below line
+            self.data['main'].rename('siconc')
+            #self.data['main'] = self.data['main'].rename('siconc') # I think this should rename to siconc
+            pass
         if self.dataset == 'PIOMAS' and self.variable == 'sivol':
             self.data['main'] = self.data['main'].rename('sivol')
         
@@ -208,12 +228,12 @@ class Loader():
         if self.input_files['main']['alias'] == 'OBS':
             self.input_files['main']['alias'] = self.dataset
 
-    def _make_timeseries_xaxis(self):
-        ''' Make the time variable for plotting.'''
-        if self.dataset == 'HadISST': # HadISST time variable will plot fine
-            self.plot_time = self.data['main']['time'].values
-        elif 'HadGEM' in self.dataset: # HadGEM time variable needs converting
-            self.plot_time = convert_cftime_to_datetime(self.data['main']['time'].values)
+    # def _make_timeseries_xaxis(self):
+    #     ''' Make the time variable for plotting.'''
+    #     if self.dataset == 'HadISST': # HadISST time variable will plot fine
+    #         self.plot_time = self.data['main']['time'].values
+    #     elif 'HadGEM' in self.dataset: # HadGEM time variable needs converting
+    #         self.plot_time = convert_cftime_to_datetime(self.data['main']['time'].values)
 
     def _make_region_mask(self):
         ''' 
@@ -224,8 +244,15 @@ class Loader():
         '''
         # This work is done by a function external to the loader
         #region_mask = make_region_mask(self.region, self.data['main']['lon'], self.data['main']['lat'])
+        print('In _make_region_mask with %s' % self.dataset)
+        print(self.data)
+        print(self.data['main'])
+        print(self.data['main'].coords)
+        print(self.data['main'].coord('longitude').points)
         region_mask = make_region_mask(self.region, self.data['main'].coord('longitude').points, self.data['main'].coord('latitude').points)
 
+        print('891011')
+        print(region_mask)
         region_mask_b = np.broadcast_to(region_mask, self.data['main'].data.shape)
 
         self.region_mask, self.region_mask_b = region_mask, region_mask_b
@@ -242,10 +269,18 @@ class Loader():
     def _subset_data(self):    
         ''' Subset data to the specified region using the region mask.'''
         for ds in ['main', 'min', 'max']:
+
+            #TODO: tidy this
+            if self.dataset == 'HadISST':
+                if ds == 'main':
+                    print(self.region_mask_b.shape)
+                    print(self.data[ds].data.shape)
+
             try:
                 #self.data[ds] = self.data[ds].where(self.region_mask_b, drop=True)
+                print(self.data[ds].data.shape)
                 self.data[ds].data = np.ma.masked_where(~self.region_mask_b, self.data[ds].data)
-            except KeyError:
+            except:
                 print('No %s data found for %s so no mask applied' % (ds, self.dataset))
 
             # Now try for areacello which needs an unbroadcast mask
@@ -253,7 +288,7 @@ class Loader():
                 try:
                     # self.data['areacello'] = self.data['areacello'].where(self.region_mask_b, drop=True)
                     self.data['areacello'].data = np.ma.masked_where(~self.region_mask, self.data['areacello'].data)
-                except KeyError:
+                except:
                     print('No areacello data found for %s so no mask applied' % (self.dataset))
 
 
@@ -443,13 +478,20 @@ def get_region_indicies(region, lon2d, lat2d):
 
     return indexesi, indexesj
 
-def make_region_mask(region, lon2d, lat2d):
+def make_region_mask(region, lons, lats):
     print('Making region mask for region: %s' % region)
-    print(lon2d)
+
+    # If lons and lats are 1D, we need to meshgrid them
+    if len(lons.shape) == 1 and len(lats.shape) == 1:
+        print('Making HadISST 2d coords')
+        lon2d, lat2d = np.meshgrid(lons, lats)
+        print(lon2d)
+    elif len(lons.shape) == 2 and len(lats.shape) == 2:
+        lon2d, lat2d = lons, lats
+    else:
+        raise ValueError('lons and lats must be 1D or 2D arrays')
+
     indexesi, indexesj = get_region_indicies(region, lon2d, lat2d)
     mask = np.zeros_like(lon2d, dtype=bool)
-    if len(mask.shape) == 2:
-        mask[indexesi, indexesj] = True
-    else:
-        print('Need to implement 1D logic here')
-    return mask 
+    mask[indexesi, indexesj] = True
+    return mask

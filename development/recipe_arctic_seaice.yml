@@ -22,7 +22,7 @@ documentation:
 # Model problems
 datasets:
   - {dataset: HadGEM3-GC31-LL, project: CMIP6}
-  - {dataset: HadGEM3-GC31-MM, project: CMIP6}
+#  - {dataset: HadGEM3-GC31-MM, project: CMIP6}
 #  - {dataset: HadGEM3-GC31-LL, project: CMIP6, mip: SImon, exp: historical, ensemble: r*i1p1f3, grid: gn}
 #  - {dataset: HadGEM3-GC31-MM, project: CMIP6, mip: SImon, exp: historical, ensemble: r*i1p1f3, grid: gn}
 
@@ -89,6 +89,19 @@ preprocessors:
       span: full
       statistics: [mean]
       groupby: [dataset]
+
+  timeseries_gs:
+    extract_region:
+      start_longitude: 0
+      end_longitude: 360
+      start_latitude: 65
+      end_latitude: 90
+    # area_statistics:
+    #   operator: sum
+    multi_model_statistics:
+      span: full
+      statistics: [mean]
+      groupby: [dataset]
       
     
 diagnostics:
@@ -105,8 +118,8 @@ diagnostics:
         #preprocessor: whole_arctic_sum # this does the summing for the region passed to the preprocessor
         preprocessor: arctic_gs_monthmean # this excludes the sum
         #convert_units: 1e6 km2
-        # additional_datasets:
-        #   -  {dataset: HadISST, project: OBS, mip: OImon, tier: 2, type: reanaly, version: 1}
+        additional_datasets:
+          -  {dataset: HadISST, project: OBS, mip: OImon, tier: 2, type: reanaly, version: 1, ensemble: '', grid: ''}
       areacello:
         mip: Ofx
         grid: gn
@@ -127,8 +140,8 @@ diagnostics:
         dummy_plot: False
         variables_to_plot: [siconc] #, sivol]
         model_datasets: [HadGEM3-GC31-LL] #, HadGEM3-GC31-MM]
-        obs_datasets: [] # [HadISST]
-        regions: ['Arctic', 'EB', 'AB']
+        obs_datasets: [HadISST]
+        regions: ['AB'] # ['Arctic', 'EB', 'AB']
 
   # maps:
   #   description: Maps of March and September sea-ice concentration
@@ -153,9 +166,13 @@ diagnostics:
   #   description: Time series of integrated sea-ice area
   #   variables:
   #     siconc: 
+  #       mip: SImon
+  #       exp: historical
+  #       ensemble: r*i1p1f3
+  #       grid: gn
   #       start_year: 1979
   #       end_year: 2000
-  #       preprocessor: timeseries_sum  
+  #       preprocessor: timeseries_gs 
   #       additional_datasets:
   #       -  {dataset: HadISST, project: OBS, mip: OImon, tier: 2, type: reanaly, version: 1}
   #   scripts:
@@ -163,8 +180,8 @@ diagnostics:
   #       script: /home/users/max.thomas/projects/esmvaltool/development/diag_scripts/arctic_seaice.py
   #       dummy_plot: False
   #       variables_to_plot: [siconc]
-  #       model_datasets: [HadGEM3-GC31-LL, HadGEM3-GC31-MM]
-  #       obs_datasets: [HadISST]
+  #       model_datasets: [HadGEM3-GC31-LL] #, HadGEM3-GC31-MM]
+  #       obs_datasets: [] #[HadISST]
           
   # region_plot:
   #   description: Regions used for subsetting
