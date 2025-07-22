@@ -207,14 +207,34 @@ class Timeseries(Loader):
     variable (str) -- variable name (short CMOR name)
     aliases (list) -- list of aliases for the various dataset entries (i.e. ['Mean', 'Min', 'Max']) (default [None])
     '''
-    def __init__(self, input_data, dataset, variable, aliases=[None]):
-        super().__init__(input_data, dataset, variable, aliases)
+    def __init__(self, input_data, dataset, variable, aliases=[None], region=None):
+        ''' Initialise the Timeseries object. '''
+        super().__init__(input_data, dataset, variable, aliases, region=region)
+        # TODO: make the following timeseries specific
+        # TODO: eventaully move the plot class initialisation code to utils as its largey shared accross plots
+        # print('SeasonalCycle: __init__: ')
+        # print('For dataset %s and variable %s' % (self.dataset, self.variable))
+        # print('With region %s' % self.region)
+        # print('With aliases for datasets %s' % self.aliases)
+
+        # # Add generic seasonal cycle attributes
+        # self.plot_description = 'Seasonal cycle'
+        # self.timerange = utils.get_timerange_from_input_data(self.input_data)
+   
+        # # Add variable specific attributes and perform variable specific procesing steps
+        # # ----- siconc
+        # if self.variable == 'siconc':
+        #     self._multiply_by_area()
+        #     self._sum_over_area()
+        #     self._update_units(10**-14) # units after integrating are 10**-2 m2 in the input data. Multiply these by 10**-14 to get Mkm2
+        #     self.yvar_description = 'sum of sea ice area [Mkm^2]'
+
+        # # Make caption for the figure
+        # self.caption = utils.make_figure_caption(self.plot_description, self.yvar_description, self.region, self.timerange)
+        # print(self.caption)
+
         # Make time axis
         self._make_timeseries_xaxis()
-
-        print('TSTSTSTSTS')
-        print(self.data['main'])
-        print('TSTSTSTST')
 
     def _make_timeseries_xaxis(self):
         ''' Make the time variable for plotting.'''
@@ -240,7 +260,6 @@ class Timeseries(Loader):
             colour = line_parameters['colour']
         if self.plot_type == 'single':
             ax.plot(self.plot_time, self.data['main'], colour, label=self.input_files['main']['alias'])
-            print('ffffffffffffffffff')
             print(self.data['main'])
         elif self.plot_type == 'range':
             ax.plot(self.plot_time, self.data['main'], '-' + colour, label=self.input_files['main']['alias'])
