@@ -43,36 +43,22 @@ class Loader():
         if not self.input_files is None:
             self._load_data()
             # Update observational data if needed
-            print('PS - after load data')
-            print(self.data['main'])
             self._update_obs_data()
-            print('PS - after update obs data')
-            print(self.data['main'])
             # Rename variable if needed
             self._rename_variable()
-            print('PS - after rename')
-            print(self.data['main'])
             # Replace OBS alias with dataset name if needed
             self._replace_obs_alias()
-            print('PS - after replace obs alias')
-            print(self.data['main'])
         
         # If it has been passed as a file, load areacello data to data['areacello']
         self._get_areacello()
-        print('PS - after get areacello')
-        print(self.data['main'])
-            
+        
         # Make region mask
         self.region = region
         self._make_region_mask()
-        print('PS - after make region mask')
-        print(self.data['main'])
 
         # Subset data to region if needed
         if self.region is not None:
             self._subset_data()
-            print('PS - after subset data')
-            print(self.data['main'])
 
         # Print loader summary
         self._print_summary()
@@ -178,7 +164,6 @@ class Loader():
             print('No data found for %s %s' % (self.dataset, self.variable))
             self.plot_type = 'no_data'
         elif len(self.input_files) == 1:
-            #self.data = {'main': xr.open_dataset(self.input_files['main']['file'])[self.alternate_variable]}
             self.data = {'main': iris.load_cube(self.input_files['main']['file'])}
             print('1234567')
             print(self.data['main'])
@@ -216,24 +201,14 @@ class Loader():
     def _rename_variable(self):
         ''' Rename variable if needed because of incomplete cmorization.'''
         if self.dataset == 'HadISST' and self.variable == 'siconc':
-            #TODO: test below line
             self.data['main'].rename('siconc')
-            #self.data['main'] = self.data['main'].rename('siconc') # I think this should rename to siconc
-            pass
         if self.dataset == 'PIOMAS' and self.variable == 'sivol':
-            self.data['main'] = self.data['main'].rename('sivol')
+            self.data['main'].rename('sivol')
         
     def _replace_obs_alias(self):
         ''' Replace OBS alias with dataset name, or do nothing for model dataset.'''
         if self.input_files['main']['alias'] == 'OBS':
             self.input_files['main']['alias'] = self.dataset
-
-    # def _make_timeseries_xaxis(self):
-    #     ''' Make the time variable for plotting.'''
-    #     if self.dataset == 'HadISST': # HadISST time variable will plot fine
-    #         self.plot_time = self.data['main']['time'].values
-    #     elif 'HadGEM' in self.dataset: # HadGEM time variable needs converting
-    #         self.plot_time = convert_cftime_to_datetime(self.data['main']['time'].values)
 
     def _make_region_mask(self):
         ''' 
@@ -243,42 +218,18 @@ class Loader():
         Two versions are needed, one bradcast to time dims and one not (for areacello).
         '''
         # This work is done by a function external to the loader
-        #region_mask = make_region_mask(self.region, self.data['main']['lon'], self.data['main']['lat'])
-        print('In _make_region_mask with %s' % self.dataset)
-        print(self.data)
-        print(self.data['main'])
-        print(self.data['main'].coords)
-        print(self.data['main'].coord('longitude').points)
         region_mask = make_region_mask(self.region, self.data['main'].coord('longitude').points, self.data['main'].coord('latitude').points)
 
-        print('891011')
-        print(region_mask)
+        # Broadcast the region mask to the shape of the data
         region_mask_b = np.broadcast_to(region_mask, self.data['main'].data.shape)
 
         self.region_mask, self.region_mask_b = region_mask, region_mask_b
-
-        # region_mask_xr = xr.DataArray(
-        # region_mask,
-        # dims=('j', 'i'),  
-        # coords={'i': self.data['main']['i'], 'j': self.data['main']['j']}
-        # )
-        # region_mask_xr_b = region_mask_xr.broadcast_like(self.data['main'])
-        # self.region_mask_xr = region_mask_xr # geographic mask
-        # self.region_mask_xr_b = region_mask_xr_b # mask broadcast to time dim
 
     def _subset_data(self):    
         ''' Subset data to the specified region using the region mask.'''
         for ds in ['main', 'min', 'max']:
 
-            #TODO: tidy this
-            if self.dataset == 'HadISST':
-                if ds == 'main':
-                    print(self.region_mask_b.shape)
-                    print(self.data[ds].data.shape)
-
             try:
-                #self.data[ds] = self.data[ds].where(self.region_mask_b, drop=True)
-                print(self.data[ds].data.shape)
                 self.data[ds].data = np.ma.masked_where(~self.region_mask_b, self.data[ds].data)
             except:
                 print('No %s data found for %s so no mask applied' % (ds, self.dataset))
@@ -286,7 +237,6 @@ class Loader():
             # Now try for areacello which needs an unbroadcast mask
             if 'areacello' in self.data:
                 try:
-                    # self.data['areacello'] = self.data['areacello'].where(self.region_mask_b, drop=True)
                     self.data['areacello'].data = np.ma.masked_where(~self.region_mask, self.data['areacello'].data)
                 except:
                     print('No areacello data found for %s so no mask applied' % (self.dataset))
@@ -376,7 +326,7 @@ def get_datasets_from_input_data(input_data):
 def select_input_data_entry(input_data, dataset, variable, alias=None):
     '''Selects the input data entry from the input_data dictionary based on the dataset, variable and (optionally) alias.
     
-    NEEDS UPDATING
+    TODO: NEEDS UPDATING
 
     Args:
         input_data (dict): Dictionary containing the input data.
@@ -407,12 +357,14 @@ def select_input_data_entry(input_data, dataset, variable, alias=None):
                 break
     return None
 
+# TODO: update to be consistent with iris
 def extract_months_using_datetime(da, months):
     # Extract the month(s) from the xarray data array
     if not isinstance(months, list): # Ensure months is a list
         months = [months]
     return da.where(da.time.dt.month.isin(months), drop=True)
 
+# TODO: update to be consistent with iris
 def convert_cftime_to_datetime(cftime_array):
     # Convert cftime to datetime
     date_time_converted = [datetime.datetime(t.year, t.month, t.day) for t in cftime_array]

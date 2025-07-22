@@ -11,38 +11,57 @@ import arctic_seaice.utils as utils
 from arctic_seaice.utils import Loader
 
 class SeasonalCycle(Loader):
-    ''' Load seasonal cycle data from a dataset and variable and provide function to plot it.
+    ''' 
+    Load seasonal cycle data from a dataset and variable, if neccesary multiply by area and/or sum, and provide function to plot it.
+
+    Loading and region subsetting is handled by utils.Loader, which this class inherits from.
 
     Keyword arguments:
     input_data (dict) -- dictionary of input data
     dataset (str) -- dataset name (dataset name from ESGF)
     variable (str) -- variable name (short CMOR name)
     aliases (list) -- list of aliases for the various dataset entries (i.e. ['Mean', 'Min', 'Max']) (default [None])
+    region (str) -- region to plot the seasonal cycle for (default None)
     '''
     def __init__(self, input_data, dataset, variable, aliases=[None], region=None):
+        ''' Initialise the SeasonalCycle object. '''
+
+        # Initialise from Loader, which assigns attributes and loads the data
         super().__init__(input_data, dataset, variable, aliases, region=region)
+
         print('SeasonalCycle: __init__: ')
         print('For dataset %s and variable %s' % (self.dataset, self.variable))
         print('With region %s' % self.region)
         print('With aliases for datasets %s' % self.aliases)
 
+        # Add generic seasonal cycle attributes
         self.plot_description = 'Seasonal cycle'
-    
-
-        # Processing steps for siconc processing
+        self.timerange = utils.get_timerange_from_input_data(self.input_data)
+   
+        # Add variable specific attributes and perform variable specific procesing steps
+        # ----- siconc
         if self.variable == 'siconc':
             self._multiply_by_area()
             self._sum_over_area()
-            self._update_units(10**-14) # units after integrating are 10**-2 m2 = 10**-14 Mkm2
+            self._update_units(10**-14) # units after integrating are 10**-2 m2 in the input data. Multiply these by 10**-14 to get Mkm2
             self.yvar_description = 'sum of sea ice area [Mkm^2]'
-            self.timerange = utils.get_timerange_from_input_data(self.input_data)
 
+        # Make caption for the figure
         self.caption = utils.make_figure_caption(self.plot_description, self.yvar_description, self.region, self.timerange)
         print(self.caption)
 
         
 
     def _multiply_by_area(self):
+        '''
+        Multiply the main variable by the areacello variable.
+
+        If min and max exist, perform the same processing for those.
+
+        In the case of HadISST siconc data, we don't do this step here as areacello doesn't exist. Instead we ultiply and sum together in _sum_over_area.
+
+        self.data are updated directly, resulting in units of 0.01 m2
+        '''
         print('Multiplying %s by areacello.' % self.variable)
         # self.data['main'] = self.data['main'] * self.data['areacello']
         if self.dataset == 'HadISST':
@@ -54,10 +73,15 @@ class SeasonalCycle(Loader):
                 self.data['min'].data = self.data['min'].data * self.data['areacello'].data
                 self.data['max'].data = self.data['max'].data * self.data['areacello'].data
             self.multiplied_by_area = True
-        print('33333333333333333333')
-        print(self.data['main'])
 
     def _sum_over_area(self):
+        '''
+        Sum the main variable over the area defined by the region mask.
+
+        If min and max exist, perform the same processing for those.
+
+        In the case of HadISST siconc, we use esmvalcore.preprocessor.area_statistics to sum and multiply by area in one step, as HadISST does not have an areacello variable.
+        '''
         print('Summing %s over area.' % self.variable)
         if self.dataset == 'HadISST':
             print('SeasonalCycle, _sum_over_area: summing and multiplying by area simultaneously as HadISST has no areacello')
@@ -69,10 +93,9 @@ class SeasonalCycle(Loader):
                 self.data['min'] = self.data['min'].collapsed(['latitude', 'longitude'], iris.analysis.SUM)
                 self.data['max'] = self.data['max'].collapsed(['latitude', 'longitude'], iris.analysis.SUM)
 
-        print('44444444444444444')
-        print(self.data['main'])
 
     def _update_units(self, factor):
+        ''' Update the units of the main variable and, if they exist, min and max variables. '''
         self.data['main'].data = self.data['main'].data * factor
         if 'min' in self.data:
             self.data['min'].data = self.data['min'].data * factor
