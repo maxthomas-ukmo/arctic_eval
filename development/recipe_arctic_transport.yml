@@ -76,7 +76,7 @@ diagnostics:
         ensemble: r1i1p1f1
     scripts:
       strait_flux:
-        script: /home/users/max.thomas/projects/esmvaltool/development/diag_scripts/arctic_seaice.py
+        script: /home/users/max.thomas/projects/esmvaltool/development/diag_scripts/arctic_eval.py
         plot_type: [crosssection, timeseries]
         dummy_plot: False
         time_start: 1979-01 # These are needed here to pass to the strait flux functions and must match the preprocessing
@@ -96,6 +96,6 @@ diagnostics:
   #     thkcello: *variables
     # scripts:
     #   bsf_test:
-    #     script: ~mathomas/Projects/esmvaltool/arctic_ocean_recipe/cmip6_eval/diag_scripts/arctic_seaice.py
+    #     script: ~mathomas/Projects/esmvaltool/arctic_ocean_recipe/cmip6_eval/diag_scripts/arctic_eval.py
     #     dummy_plot: True
     
