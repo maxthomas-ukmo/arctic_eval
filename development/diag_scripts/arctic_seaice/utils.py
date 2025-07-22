@@ -495,3 +495,16 @@ def make_region_mask(region, lons, lats):
     mask = np.zeros_like(lon2d, dtype=bool)
     mask[indexesi, indexesj] = True
     return mask
+
+def get_timerange_from_input_data(input_data, key_index=0):
+    key = list(input_data.keys())[key_index]
+    timerange = input_data[key]['timerange']
+    return timerange
+
+def make_figure_caption(plot_type, yvar_description, region, timerange, model_datasets=None, obs_datasets=None):
+    caption = f"{plot_type} of {yvar_description} in {region} region for {timerange} time mean."
+    if model_datasets:
+        caption += f"\n - Models: {', '.join(model_datasets)}"
+    if obs_datasets:
+        caption += f"\n - Observations: {', '.join(obs_datasets)}"
+    return caption

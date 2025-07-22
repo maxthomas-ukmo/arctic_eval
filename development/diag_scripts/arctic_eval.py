@@ -188,7 +188,7 @@ def plot_seasonal_cycles(cfg):
             ax = fig.add_subplot(111)
 
             # Create provenance record for one variable
-            provenance_record = ProvenanceRecord()
+            provenance_record = ProvenanceRecord(region=region)
 
             # Loop over model datasets
             for dataset in cfg['model_datasets']:
@@ -221,6 +221,7 @@ def plot_seasonal_cycles(cfg):
                         for key in input_data:
                             print(input_data[key])
             
+            provenance_record.record['caption'] = seasonal_cycle.caption
             # Save figure to output dir and add it to provenance record
             save_object(fig, variable + '_' + region + '_seasonal_cycle.png', cfg, provenance_record.record)
 

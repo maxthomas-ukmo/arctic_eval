@@ -20,25 +20,27 @@ class SeasonalCycle(Loader):
     aliases (list) -- list of aliases for the various dataset entries (i.e. ['Mean', 'Min', 'Max']) (default [None])
     '''
     def __init__(self, input_data, dataset, variable, aliases=[None], region=None):
-        print('111111111111111111111111111111')
         super().__init__(input_data, dataset, variable, aliases, region=region)
         print('SeasonalCycle: __init__: ')
         print('For dataset %s and variable %s' % (self.dataset, self.variable))
         print('With region %s' % self.region)
         print('With aliases for datasets %s' % self.aliases)
 
-        print(self.data['main'])
+        self.plot_description = 'Seasonal cycle'
+    
 
         # Processing steps for siconc processing
         if self.variable == 'siconc':
             self._multiply_by_area()
             self._sum_over_area()
+            self._update_units(10**-14) # units after integrating are 10**-2 m2 = 10**-14 Mkm2
+            self.yvar_description = 'sum of sea ice area [Mkm^2]'
+            self.timerange = utils.get_timerange_from_input_data(self.input_data)
 
-        print('22222222222222222222222222')
-        print(self.data['main'])
-        print(self.data['main'].data)
-        print('22222222222222222222222222')
+        self.caption = utils.make_figure_caption(self.plot_description, self.yvar_description, self.region, self.timerange)
+        print(self.caption)
 
+        
 
     def _multiply_by_area(self):
         print('Multiplying %s by areacello.' % self.variable)
@@ -70,6 +72,12 @@ class SeasonalCycle(Loader):
         print('44444444444444444')
         print(self.data['main'])
 
+    def _update_units(self, factor):
+        self.data['main'].data = self.data['main'].data * factor
+        if 'min' in self.data:
+            self.data['min'].data = self.data['min'].data * factor
+            self.data['max'].data = self.data['max'].data * factor
+
 
     def plot(self, ax, line_parameters=None, add_labels=True):
         ''' Plot the seasonal cycle data.
@@ -90,7 +98,6 @@ class SeasonalCycle(Loader):
             colour = line_parameters['colour']
         if self.plot_type == 'single':
             ax.plot(xvar, self.data['main'].data, colour, label=self.input_files['main']['alias'])
-            print(self.data['main'])
         elif self.plot_type == 'range':
             ax.plot(xvar, self.data['main'].data, '-' + colour, label=self.input_files['main']['alias'])
             ax.fill_between(xvar, self.data['min'].data, self.data['max'].data, color=colour, alpha=0.2)
@@ -103,7 +110,7 @@ class SeasonalCycle(Loader):
         
         if add_labels:
             ax.set_xlabel('Month')
-            ax.set_ylabel(self.variable)
+            ax.set_ylabel(self.yvar_description)
             ax.set_xticks(range(1,13))
             ax.set_xticklabels(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])
 
