@@ -308,46 +308,56 @@ def plot_timeseries(cfg):
     # Get formatting properties from YAML file
     formatting = get_format_properties()
 
-    # Loop over variables
-    for variable in cfg['variables_to_plot']:
-        # Create figure for one variable
-        fig = plt.figure(dpi=300)
-        ax = fig.add_subplot(111)
+    # Get regions to plot
+    regions = cfg['regions']
+    if not regions:
+        region = ['Arctic']
+    
+    # Loop over regions
+    for region in regions:
+        print('Plotting seasonal cycles for region: %s' % region)
 
-        # Create provenance record for one variable
-        provenance_record = ProvenanceRecord()
+        # Loop over variables
+        for variable in cfg['variables_to_plot']:
+            # Create figure for one variable
+            fig = plt.figure(dpi=300)
+            ax = fig.add_subplot(111)
 
-        # Loop over model datasets
-        for dataset in cfg['model_datasets']:
-            # Get colour for dataset
-            colour = formatting['dataset'][dataset]['colour']
-            try:
-                # Create timeseries object for dataset and variable
-                timeseries = Timeseries(input_data, dataset, variable, aliases=[dataset+'Mean'])
-                # Plot timeseries to axes for that variable
-                timeseries.plot(ax, line_parameters={'colour': colour})
-                # Add ancestors to provenance record
-                provenance_record.add_ancestors(timeseries.provenance_list)
-            except:
-                logger.warning('No data found for %s %s' % (variable, dataset))
+            # Create provenance record for one variable
+            provenance_record = ProvenanceRecord()
 
-        # Loop over observational datasets
-        if cfg['obs_datasets']:
-            for dataset in cfg['obs_datasets']:
+            # Loop over model datasets
+            for dataset in cfg['model_datasets']:
                 # Get colour for dataset
                 colour = formatting['dataset'][dataset]['colour']
                 try:
-                    # Create timeseries object for observational dataset and variable
-                    timeseries = Timeseries(input_data, dataset, variable, aliases=['OBS'])
-                    # Plot timeseries to axes for that variable                 
+                    # Create timeseries object for dataset and variable
+                    timeseries = Timeseries(input_data, dataset, variable, aliases=[dataset+'Mean'], region=region)
+                    # Plot timeseries to axes for that variable
                     timeseries.plot(ax, line_parameters={'colour': colour})
                     # Add ancestors to provenance record
                     provenance_record.add_ancestors(timeseries.provenance_list)
                 except:
                     logger.warning('No data found for %s %s' % (variable, dataset))
-        
-        # Save figure to output dir and add it to provenance record
-        save_object(fig, variable+'_timeseries.png', cfg, provenance_record.record)
+
+            # Loop over observational datasets
+            if cfg['obs_datasets']:
+                for dataset in cfg['obs_datasets']:
+                    # Get colour for dataset
+                    colour = formatting['dataset'][dataset]['colour']
+                    try:
+                        # Create timeseries object for observational dataset and variable
+                        timeseries = Timeseries(input_data, dataset, variable, aliases=['OBS'], region=region)
+                        # Plot timeseries to axes for that variable                 
+                        timeseries.plot(ax, line_parameters={'colour': colour})
+                        # Add ancestors to provenance record
+                        provenance_record.add_ancestors(timeseries.provenance_list)
+                    except:
+                        logger.warning('No data found for %s %s' % (variable, dataset))
+            
+            provenance_record.record['caption'] = timeseries.caption
+            # Save figure to output dir and add it to provenance record
+            save_object(fig, variable + '_' + region + '_timeseries.png', cfg, provenance_record.record)
 
 def plot_regions(cfg):
     # For each model, plot one axes with all regions

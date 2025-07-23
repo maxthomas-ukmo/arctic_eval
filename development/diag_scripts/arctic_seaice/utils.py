@@ -7,6 +7,8 @@ import numpy as np
 import iris
 
 from esmvaltool.diag_scripts.shared import ProvenanceLogger
+from esmvalcore.preprocessor import area_statistics
+
 
 class Loader():
     '''
@@ -85,6 +87,8 @@ class Loader():
         print('IN _get_areacello')
         try:
             self.data['areacello'] = self._get_area_data()
+            print('7777777777777777777')
+            print(self.data)
             self.area = True
         except:
             print('No areacello data found for %s' % self.dataset)
@@ -108,6 +112,7 @@ class Loader():
             raw_input_file = select_input_data_entry(self.input_data, self.dataset, self.variable, alias)
             if raw_input_file is not None:
                 raw_input_files.append(raw_input_file)
+                print('88888888')
                 print('%s: Data found for %s %s %s' % (self.called_by, self.dataset, self.variable, alias))
             else:
                 print('%s: No data found for %s %s %s' % (self.called_by, self.dataset, self.variable, alias))
@@ -150,8 +155,14 @@ class Loader():
             data = self.input_data[key]
             if data['dataset'] == self.dataset and data['short_name'] == 'areacello':
                 area_file = key
+                print('FOUND AREA for ' + key)
         if area_file is None:
             print('No areacello data found for %s' % self.dataset)
+            for key in self.input_data:
+                print('----' + key)
+                data = self.input_data[key]
+                print(data['short_name'] + ' ' + data['dataset'])
+                print('-----')
             return None
         else:
             # return xr.open_dataset(area_file)['areacello']
@@ -240,6 +251,56 @@ class Loader():
                     self.data['areacello'].data = np.ma.masked_where(~self.region_mask, self.data['areacello'].data)
                 except:
                     print('No areacello data found for %s so no mask applied' % (self.dataset))
+
+    # Functions to be accessed by plotting class
+    def multiply_by_area(self):
+        '''
+        Multiply the main variable by the areacello variable.
+
+        If min and max exist, perform the same processing for those.
+
+        In the case of HadISST siconc data, we don't do this step here as areacello doesn't exist. Instead we ultiply and sum together in _sum_over_area.
+
+        self.data are updated directly, resulting in units of 0.01 m2
+        '''
+        print('Multiplying %s by areacello.' % self.variable)
+        # self.data['main'] = self.data['main'] * self.data['areacello']
+        if self.dataset == 'HadISST':
+            print('SeasonalCycle, _multiply_by_area: passing as HadISST does not have areacello')
+            self.multiplied_by_area = False
+        else:
+            self.data['main'].data = self.data['main'].data * self.data['areacello'].data
+            if 'min' in self.data:
+                self.data['min'].data = self.data['min'].data * self.data['areacello'].data
+                self.data['max'].data = self.data['max'].data * self.data['areacello'].data
+            self.multiplied_by_area = True
+
+    def sum_over_area(self):
+        '''
+        Sum the main variable over the area defined by the region mask.
+
+        If min and max exist, perform the same processing for those.
+
+        In the case of HadISST siconc, we use esmvalcore.preprocessor.area_statistics to sum and multiply by area in one step, as HadISST does not have an areacello variable.
+        '''
+        print('Summing %s over area.' % self.variable)
+        if self.dataset == 'HadISST':
+            print('SeasonalCycle, _sum_over_area: summing and multiplying by area simultaneously as HadISST has no areacello')
+            self.data['main'] = area_statistics(self.data['main'], operator='sum')
+            self.multiplied_by_area = True
+        else:
+            self.data['main'] = self.data['main'].collapsed(['latitude', 'longitude'], iris.analysis.SUM)
+            if 'min' in self.data:
+                self.data['min'] = self.data['min'].collapsed(['latitude', 'longitude'], iris.analysis.SUM)
+                self.data['max'] = self.data['max'].collapsed(['latitude', 'longitude'], iris.analysis.SUM)
+
+
+    def update_units(self, factor):
+        ''' Update the units of the main variable and, if they exist, min and max variables. '''
+        self.data['main'].data = self.data['main'].data * factor
+        if 'min' in self.data:
+            self.data['min'].data = self.data['min'].data * factor
+            self.data['max'].data = self.data['max'].data * factor
 
 
 def get_format_properties(plot_formatting='/home/users/max.thomas/projects/esmvaltool/development/plot_formatting.yml', properties=['colour']):

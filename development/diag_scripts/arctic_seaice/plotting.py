@@ -4,8 +4,6 @@ import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import numpy as np
 
-from esmvalcore.preprocessor import area_statistics
-
 import arctic_seaice.utils as utils
 
 from arctic_seaice.utils import Loader
@@ -39,68 +37,17 @@ class SeasonalCycle(Loader):
         self.timerange = utils.get_timerange_from_input_data(self.input_data)
    
         # Add variable specific attributes and perform variable specific procesing steps
+        # The data passed by the loader should be gridded, 2D, and have been preprocessed into monthly means for each gridcell
         # ----- siconc
         if self.variable == 'siconc':
-            self._multiply_by_area()
-            self._sum_over_area()
-            self._update_units(10**-14) # units after integrating are 10**-2 m2 in the input data. Multiply these by 10**-14 to get Mkm2
+            self.multiply_by_area()
+            self.sum_over_area()
+            self.update_units(10**-14) # units after integrating are 10**-2 m2 in the input data. Multiply these by 10**-14 to get Mkm2
             self.yvar_description = 'sum of sea ice area [Mkm^2]'
 
         # Make caption for the figure
         self.caption = utils.make_figure_caption(self.plot_description, self.yvar_description, self.region, self.timerange)
         print(self.caption)
-
-        
-
-    def _multiply_by_area(self):
-        '''
-        Multiply the main variable by the areacello variable.
-
-        If min and max exist, perform the same processing for those.
-
-        In the case of HadISST siconc data, we don't do this step here as areacello doesn't exist. Instead we ultiply and sum together in _sum_over_area.
-
-        self.data are updated directly, resulting in units of 0.01 m2
-        '''
-        print('Multiplying %s by areacello.' % self.variable)
-        # self.data['main'] = self.data['main'] * self.data['areacello']
-        if self.dataset == 'HadISST':
-            print('SeasonalCycle, _multiply_by_area: passing as HadISST does not have areacello')
-            self.multiplied_by_area = False
-        else:
-            self.data['main'].data = self.data['main'].data * self.data['areacello'].data
-            if 'min' in self.data:
-                self.data['min'].data = self.data['min'].data * self.data['areacello'].data
-                self.data['max'].data = self.data['max'].data * self.data['areacello'].data
-            self.multiplied_by_area = True
-
-    def _sum_over_area(self):
-        '''
-        Sum the main variable over the area defined by the region mask.
-
-        If min and max exist, perform the same processing for those.
-
-        In the case of HadISST siconc, we use esmvalcore.preprocessor.area_statistics to sum and multiply by area in one step, as HadISST does not have an areacello variable.
-        '''
-        print('Summing %s over area.' % self.variable)
-        if self.dataset == 'HadISST':
-            print('SeasonalCycle, _sum_over_area: summing and multiplying by area simultaneously as HadISST has no areacello')
-            self.data['main'] = area_statistics(self.data['main'], operator='sum')
-            self.multiplied_by_area = True
-        else:
-            self.data['main'] = self.data['main'].collapsed(['latitude', 'longitude'], iris.analysis.SUM)
-            if 'min' in self.data:
-                self.data['min'] = self.data['min'].collapsed(['latitude', 'longitude'], iris.analysis.SUM)
-                self.data['max'] = self.data['max'].collapsed(['latitude', 'longitude'], iris.analysis.SUM)
-
-
-    def _update_units(self, factor):
-        ''' Update the units of the main variable and, if they exist, min and max variables. '''
-        self.data['main'].data = self.data['main'].data * factor
-        if 'min' in self.data:
-            self.data['min'].data = self.data['min'].data * factor
-            self.data['max'].data = self.data['max'].data * factor
-
 
     def plot(self, ax, line_parameters=None, add_labels=True):
         ''' Plot the seasonal cycle data.
@@ -211,37 +158,45 @@ class Timeseries(Loader):
         ''' Initialise the Timeseries object. '''
         super().__init__(input_data, dataset, variable, aliases, region=region)
         # TODO: make the following timeseries specific
-        # TODO: eventaully move the plot class initialisation code to utils as its largey shared accross plots
-        # print('SeasonalCycle: __init__: ')
-        # print('For dataset %s and variable %s' % (self.dataset, self.variable))
-        # print('With region %s' % self.region)
-        # print('With aliases for datasets %s' % self.aliases)
+        # TODO: eventually move the plot class initialisation code to utils as its largely shared accross plots
+        print('Timeseries: __init__: ')
+        print('For dataset %s and variable %s' % (self.dataset, self.variable))
+        print('With region %s' % self.region)
+        print('With aliases for datasets %s' % self.aliases)
 
-        # # Add generic seasonal cycle attributes
-        # self.plot_description = 'Seasonal cycle'
-        # self.timerange = utils.get_timerange_from_input_data(self.input_data)
+        # Add generic timeseries attributes
+        self.plot_description = 'Timeseries'
+        self.timerange = utils.get_timerange_from_input_data(self.input_data)
    
-        # # Add variable specific attributes and perform variable specific procesing steps
-        # # ----- siconc
-        # if self.variable == 'siconc':
-        #     self._multiply_by_area()
-        #     self._sum_over_area()
-        #     self._update_units(10**-14) # units after integrating are 10**-2 m2 in the input data. Multiply these by 10**-14 to get Mkm2
-        #     self.yvar_description = 'sum of sea ice area [Mkm^2]'
+        # Add variable specific attributes and perform variable specific procesing steps
+        # The data passed by loader should be gridded, 2D, and have a monthly time dimension
+        # ----- siconc
+        if self.variable == 'siconc':
+            self.multiply_by_area()
+            self.sum_over_area()
+            self.update_units(10**-14) # units after integrating are 10**-2 m2 in the input data. Multiply these by 10**-14 to get Mkm2
+            self.yvar_description = 'sum of sea ice area [Mkm^2]'
 
-        # # Make caption for the figure
-        # self.caption = utils.make_figure_caption(self.plot_description, self.yvar_description, self.region, self.timerange)
-        # print(self.caption)
+        # Make caption for the figure
+        self.caption = utils.make_figure_caption(self.plot_description, self.yvar_description, self.region, self.timerange)
+        print(self.caption)
+
+        print(self.data['main'].coord('time').points)
+        print(type(self.data['main'].coord('time').points))
 
         # Make time axis
         self._make_timeseries_xaxis()
 
+        
+
+
     def _make_timeseries_xaxis(self):
         ''' Make the time variable for plotting.'''
-        if self.dataset == 'HadISST': # HadISST time variable will plot fine
-            self.plot_time = self.data['main'].coords('time').points
-        elif 'HadGEM' in self.dataset: # HadGEM time variable needs converting
-            self.plot_time = utils.convert_cftime_to_datetime(self.data['main'].coords('time').points)
+        # if self.dataset == 'HadISST': # HadISST time variable will plot fine
+        #     self.plot_time = self.data['main'].coord('time').points
+        # elif 'HadGEM' in self.dataset: # HadGEM time variable needs converting
+        #     #self.plot_time = utils.convert_cftime_to_datetime(self.data['main'].coords('time').points)
+        self.plot_time = self.data['main'].coord('time').units.num2date(self.data['main'].coord('time').points)
 
     def plot(self, ax, line_parameters=None, add_labels=True):
         ''' Plot the timeseries data.
@@ -259,11 +214,14 @@ class Timeseries(Loader):
         else:
             colour = line_parameters['colour']
         if self.plot_type == 'single':
-            ax.plot(self.plot_time, self.data['main'], colour, label=self.input_files['main']['alias'])
-            print(self.data['main'])
+            print('Plotting Single')
+            xvar = [str(t) for t in self.plot_time]
+            ax.plot(xvar, self.data['main'].data) #, colour, label=self.input_files['main']['alias'])
+            #ax.plot([1,2,3,4,5], self.data['main'].data[:5])
+            print('Plotted Single')
         elif self.plot_type == 'range':
-            ax.plot(self.plot_time, self.data['main'], '-' + colour, label=self.input_files['main']['alias'])
-            ax.fill_between(self.plot_time, self.data['min'], self.data['max'], color=colour, alpha=0.2)
+            ax.plot(self.plot_time, self.data['main'].data, '-' + colour, label=self.input_files['main']['alias'])
+            ax.fill_between(self.plot_time, self.data['min'].data, self.data['max'].data, color=colour, alpha=0.2)
         elif self.plot_type == 'no_data':
             print('No data found for %s %s' % (self.dataset, self.variable))
         else:
