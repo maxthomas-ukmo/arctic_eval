@@ -1,5 +1,7 @@
 import xarray as xr
 import iris
+import datetime
+import cftime
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import numpy as np
@@ -196,7 +198,9 @@ class Timeseries(Loader):
         #     self.plot_time = self.data['main'].coord('time').points
         # elif 'HadGEM' in self.dataset: # HadGEM time variable needs converting
         #     #self.plot_time = utils.convert_cftime_to_datetime(self.data['main'].coords('time').points)
-        self.plot_time = self.data['main'].coord('time').units.num2date(self.data['main'].coord('time').points)
+        cftimes = self.data['main'].coord('time').units.num2date(self.data['main'].coord('time').points)
+        #self.plot_time = [datetime.datetime(d.year, d.month, d.day) for d in cftimes]
+        self.plot_time = cftimes
 
     def plot(self, ax, line_parameters=None, add_labels=True):
         ''' Plot the timeseries data.
@@ -214,14 +218,16 @@ class Timeseries(Loader):
         else:
             colour = line_parameters['colour']
         if self.plot_type == 'single':
-            print('Plotting Single')
-            xvar = [str(t) for t in self.plot_time]
-            ax.plot(xvar, self.data['main'].data) #, colour, label=self.input_files['main']['alias'])
-            #ax.plot([1,2,3,4,5], self.data['main'].data[:5])
-            print('Plotted Single')
+            #ax.plot(self.plot_times, self.data['main'].data, colour, label=self.input_files['main']['alias'])
+            # Plot with xarray as it can handle the 360Day calendar (if needed)
+            da = xr.DataArray(self.data['main'].data, 
+                              coords=[self.plot_time],
+                              dims=['time'])
+            da.plot.line(ax=ax, label=self.input_files['main']['alias'], color=colour)
         elif self.plot_type == 'range':
-            ax.plot(self.plot_time, self.data['main'].data, '-' + colour, label=self.input_files['main']['alias'])
-            ax.fill_between(self.plot_time, self.data['min'].data, self.data['max'].data, color=colour, alpha=0.2)
+            print('Range plotting not implemented yet for timeseries')
+            # ax.plot(self.plot_time, self.data['main'].data, '-' + colour, label=self.input_files['main']['alias'])
+            # ax.fill_between(self.plot_time, self.data['min'].data, self.data['max'].data, color=colour, alpha=0.2)
         elif self.plot_type == 'no_data':
             print('No data found for %s %s' % (self.dataset, self.variable))
         else:
