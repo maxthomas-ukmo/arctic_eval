@@ -439,6 +439,7 @@ class RegionPlotter(Loader):
         self.regions = regions
         self.region_centers = region_centers
         self.masks = self.make_region_masks()
+        self.caption = 'Region masks for %s %s' % (self.dataset, self.variable)
 
     # TODO: move add_map_axes out of class so it can be called here and in geomap without repitition
     def add_map_axes(self, fig):

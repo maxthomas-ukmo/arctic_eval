@@ -378,6 +378,22 @@ def plot_regions(cfg):
         ax = region_plotter.add_map_axes(fig)
         region_plotter.plot_all_regions(ax)
 
+        # Add caption to provenance record
+        provenance_record.record['caption'] = region_plotter.caption
+        # Save figure to output dir and add it to provenance record
+        save_object(fig, dataset +'_regions.png', cfg, provenance_record.record)
+
+    for dataset in cfg['obs_datasets']:
+        fig = plt.figure(dpi=300)
+        # create a provenance record for the regions fig
+        provenance_record = ProvenanceRecord()
+
+        region_plotter = RegionPlotter(input_data, dataset, 'siconc', cfg['regions'], cfg['region_centers'])
+        ax = region_plotter.add_map_axes(fig)
+        region_plotter.plot_all_regions(ax)
+
+        # Add caption to provenance record
+        provenance_record.record['caption'] = region_plotter.caption
         # Save figure to output dir and add it to provenance record
         save_object(fig, dataset +'_regions.png', cfg, provenance_record.record)
 
