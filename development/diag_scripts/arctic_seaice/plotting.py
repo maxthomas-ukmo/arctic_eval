@@ -485,7 +485,7 @@ class RegionPlotter(Loader):
         ''' Make region masks for the regions defined in the input data.'''
         masks = {}
         for region in self.regions:
-            masks[region] = utils.make_region_mask(region, self.lon, self.lat) # boolean array with similar shape to nav_lat/lon
+            masks[region], lon2d, lat2d = utils.make_region_mask(region, self.lon, self.lat) # boolean array with similar shape to nav_lat/lon
         return masks
 
     def plot_one_region(self, ax, region, color, alpha=0.5, vmin=0, vmax=1, transform=ccrs.PlateCarree()):
