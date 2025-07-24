@@ -368,15 +368,6 @@ def plot_regions(cfg):
         print(input_data[key])
         print('==============================================')
 
-    # models = []
-    # for dataset in cfg['model_datasets']:
-    #     print('1111111111111111111')
-    #     print(dataset)
-    #     print('2222222222222222222')
-    #     if 'Mean' in dataset:
-    #         models.append(dataset)
-    #         print('JJJJJJJJJJJJJJJJJJJJ')
-
     # for imodel, model in enumerate(models):
     for dataset in cfg['model_datasets']:
         fig = plt.figure(dpi=300)

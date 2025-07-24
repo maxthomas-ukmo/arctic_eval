@@ -230,7 +230,10 @@ class Loader():
         '''
         # This work is done by a function external to the loader
         region_mask = make_region_mask(self.region, self.data['main'].coord('longitude').points, self.data['main'].coord('latitude').points)
-
+        print('88888888888888888888888888')
+        print(self.data['main'])
+        print('77777777777777777777777777')
+        print(region_mask)
         # Broadcast the region mask to the shape of the data
         region_mask_b = np.broadcast_to(region_mask, self.data['main'].data.shape)
 

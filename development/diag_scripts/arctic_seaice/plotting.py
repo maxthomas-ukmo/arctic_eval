@@ -225,6 +225,7 @@ class Timeseries(Loader):
                               dims=['time'])
             da.plot.line(ax=ax, label=self.input_files['main']['alias'], color=colour)
         elif self.plot_type == 'range':
+            # TODO: Implement fill between for min max aliases
             print('Range plotting not implemented yet for timeseries')
             # ax.plot(self.plot_time, self.data['main'].data, '-' + colour, label=self.input_files['main']['alias'])
             # ax.fill_between(self.plot_time, self.data['min'].data, self.data['max'].data, color=colour, alpha=0.2)
@@ -432,8 +433,8 @@ class RegionPlotter(Loader):
     '''
     def __init__(self, input_data, dataset, variable, regions, region_centers, aliases=[None], map_parameters=None):
         super().__init__(input_data, dataset, variable, aliases)
-        self.lon2d = self.data['main'].lon
-        self.lat2d = self.data['main'].lat
+        self.lon = self.data['main'].coord('longitude').points
+        self.lat = self.data['main'].coord('latitude').points
         self.map_parameters = map_parameters
         self.regions = regions
         self.region_centers = region_centers
@@ -465,13 +466,13 @@ class RegionPlotter(Loader):
         ''' Make region masks for the regions defined in the input data.'''
         masks = {}
         for region in self.regions:
-            masks[region] = utils.make_region_mask(region, self.lon2d, self.lat2d) # boolean array with similar shape to nav_lat/lon
+            masks[region] = utils.make_region_mask(region, self.lon, self.lat) # boolean array with similar shape to nav_lat/lon
         return masks
 
     def plot_one_region(self, ax, region, color, alpha=0.5, vmin=0, vmax=1, transform=ccrs.PlateCarree()):
         mask = self.masks[region] # 2D array of 1s and 0s for the region mask
         plot_mask = np.ma.masked_where(mask == 0, mask) # Mask the region
-        ax.pcolormesh(self.lon2d, self.lat2d, plot_mask * color, alpha=alpha, vmin=vmin, vmax=vmax, transform=transform)
+        ax.pcolormesh(self.lon, self.lat, plot_mask * color, alpha=alpha, vmin=vmin, vmax=vmax, transform=transform)
     
     def plot_all_regions(self, ax, alpha=0.5, vmin=0, vmax=1, transform=ccrs.PlateCarree()):
         n_regions = len(self.regions)
