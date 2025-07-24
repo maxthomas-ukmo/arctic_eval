@@ -175,8 +175,8 @@ def plot_seasonal_cycles(cfg):
     # Get regions to plot
     regions = cfg['regions']
     if not regions:
-        region = 'Arctic'
-    
+        regions = ['Arctic']
+
     # Loop over regions
     for region in regions:
         print('Plotting seasonal cycles for region: %s' % region)
@@ -253,11 +253,6 @@ def plot_geographical_maps(cfg):
                     # Create figure for each dataset, variable, and time slice
                     fig = plt.figure(dpi=300)
 
-                    print('GGGGGGG')
-                    print(region)
-                    print(dataset)
-                    print(time_slice)
-                    print(variable)
                     geo_map = GeoMap(input_data, dataset, variable, aliases=[dataset+'Mean'], region=region)
 
                     # Make a new data variable in geo_map.data. In this case we take a monthly slice
@@ -269,7 +264,7 @@ def plot_geographical_maps(cfg):
                     geo_map.plot(ax, subset)
 
                     # Create provenance record for one variable
-                    provenance_record = ProvenanceRecord(region=region)
+                    provenance_record = ProvenanceRecord(region=region, caption=geo_map.caption)
 
                     fig_name = variable + '_' + region + '_geographical_map_' + dataset + '_' + subset + '.png'
                     # Save figure to output dir and add it to provenance record
@@ -290,7 +285,7 @@ def plot_geographical_maps(cfg):
                 geo_map.plot(ax, subset)
 
                 # Create provenance record for one variable
-                provenance_record = ProvenanceRecord(region=region)
+                provenance_record = ProvenanceRecord(region=region, caption=geo_map.caption)
 
                 fig_name = variable + '_' + region + '_geographical_map_' + dataset + '_' + subset + '.png'
                 # Save figure to output dir and add it to provenance record

@@ -1,7 +1,9 @@
 import xarray as xr
 import iris
+import iris.coord_categorisation
 import datetime
 import cftime
+import calendar
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import numpy as np
@@ -101,6 +103,12 @@ class GeoMap(Loader):
         super().__init__(input_data, dataset, variable, aliases, region=region)
         # Add map parameters
         self.map_parameters = map_parameters
+        # Add a month coordinate
+        iris.coord_categorisation.add_month(self.data['main'], 'time', name='month')
+
+        self.timerange = utils.get_timerange_from_input_data(self.input_data)
+        self.caption = utils.make_figure_caption('Map', self.variable, self.region, self.timerange)
+
 
     def add_map_axes(self, fig):
         ''' Add map axes to a figure.
@@ -124,19 +132,26 @@ class GeoMap(Loader):
     
     def get_month_slice(self, time_slice, statistics='time_mean'):
         # Ensure time slice is a list
-        if not isinstance(time_slice, list):
-            time_slice = [time_slice]
+        # if not isinstance(time_slice, list):
+        #     time_slice = [time_slice]
 
         # Make string of timeslice for variable naming
-        time_slice_name = statistics
-        for ts in time_slice:
-            time_slice_name += str(ts)  
-        time_slice_data = utils.extract_months_using_datetime(self.data['main'], time_slice)
+        # time_slice_name = statistics
+        # for ts in time_slice:
+        #     time_slice_name += str(ts) 
+        # # TODO: probably this function needs rewriting 
+        # time_slice_data = utils.extract_months_using_datetime(self.data['main'], time_slice)
+
+        # Get month_abbr from time slice
+        month_str = calendar.month_abbr[time_slice]
+
+        # Subset data
+        time_slice_data = self.data['main'].extract(iris.Constraint(month=month_str))
 
         if statistics == 'time_mean':
-            self.data[time_slice_name] = time_slice_data.mean(dim='time')
+            self.data[month_str] = time_slice_data.collapsed('time', iris.analysis.MEAN)
 
-        return time_slice_name
+        return month_str
     
     def plot(self, ax, subset='main'):
         '''Plot the map data.
@@ -144,7 +159,10 @@ class GeoMap(Loader):
         Keyword arguments:
         ax (matplotlib.axes) -- axis object to plot on
         '''
-        xr.plot.pcolormesh(self.data[subset], 'lon', 'lat', transform=ccrs.PlateCarree(), cmap='viridis', ax=ax)
+        # TODO: either make data a da or rewrite this to use matplotlib
+        print('9999999999999999999999999999999999')
+        print(self.data[subset])
+        ax.pcolormesh(self.lon2d, self.lat2d, self.data[subset].data, transform=ccrs.PlateCarree(), cmap='viridis')
         ax.set_title(self.variable + ' ' + self.dataset + ' ' + subset)
         
 class Timeseries(Loader):

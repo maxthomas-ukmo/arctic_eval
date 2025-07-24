@@ -87,8 +87,6 @@ class Loader():
         print('IN _get_areacello')
         try:
             self.data['areacello'] = self._get_area_data()
-            print('7777777777777777777')
-            print(self.data)
             self.area = True
         except:
             print('No areacello data found for %s' % self.dataset)
@@ -112,7 +110,6 @@ class Loader():
             raw_input_file = select_input_data_entry(self.input_data, self.dataset, self.variable, alias)
             if raw_input_file is not None:
                 raw_input_files.append(raw_input_file)
-                print('88888888')
                 print('%s: Data found for %s %s %s' % (self.called_by, self.dataset, self.variable, alias))
             else:
                 print('%s: No data found for %s %s %s' % (self.called_by, self.dataset, self.variable, alias))
@@ -229,11 +226,8 @@ class Loader():
         Two versions are needed, one bradcast to time dims and one not (for areacello).
         '''
         # This work is done by a function external to the loader
-        region_mask = make_region_mask(self.region, self.data['main'].coord('longitude').points, self.data['main'].coord('latitude').points)
-        print('88888888888888888888888888')
-        print(self.data['main'])
-        print('77777777777777777777777777')
-        print(region_mask)
+        region_mask, self.lon2d, self.lat2d = make_region_mask(self.region, self.data['main'].coord('longitude').points, self.data['main'].coord('latitude').points)
+
         # Broadcast the region mask to the shape of the data
         region_mask_b = np.broadcast_to(region_mask, self.data['main'].data.shape)
 
@@ -510,7 +504,7 @@ def make_region_mask(region, lons, lats):
     indexesi, indexesj = get_region_indicies(region, lon2d, lat2d)
     mask = np.zeros_like(lon2d, dtype=bool)
     mask[indexesi, indexesj] = True
-    return mask
+    return mask, lon2d, lat2d
 
 def get_timerange_from_input_data(input_data, key_index=0):
     key = list(input_data.keys())[key_index]
