@@ -22,7 +22,7 @@ documentation:
 # Model problems
 datasets:
   - {dataset: HadGEM3-GC31-LL, project: CMIP6}
-#  - {dataset: HadGEM3-GC31-MM, project: CMIP6}
+  - {dataset: HadGEM3-GC31-MM, project: CMIP6}
 #  - {dataset: HadGEM3-GC31-LL, project: CMIP6, mip: SImon, exp: historical, ensemble: r*i1p1f3, grid: gn}
 #  - {dataset: HadGEM3-GC31-MM, project: CMIP6, mip: SImon, exp: historical, ensemble: r*i1p1f3, grid: gn}
 
@@ -127,7 +127,7 @@ diagnostics:
         script: /home/users/max.thomas/projects/esmvaltool/development/diag_scripts/arctic_eval.py
         dummy_plot: False
         variables_to_plot: [siconc] #, sivol]
-        model_datasets: [HadGEM3-GC31-LL] #, HadGEM3-GC31-MM]
+        model_datasets: [HadGEM3-GC31-LL, HadGEM3-GC31-MM]
         obs_datasets: [HadISST]
         regions: ['Arctic', 'EB', 'AB']
 
@@ -152,7 +152,7 @@ diagnostics:
         dummy_plot: False
         variables_to_plot: [siconc]
         regions: ['Arctic']
-        model_datasets: [HadGEM3-GC31-LL] #, HadGEM3-GC31-MM]
+        model_datasets: [HadGEM3-GC31-LL, HadGEM3-GC31-MM]
         obs_datasets: [HadISST]
         months: [3, 9]        
 
@@ -180,8 +180,8 @@ diagnostics:
         script: /home/users/max.thomas/projects/esmvaltool/development/diag_scripts/arctic_eval.py
         dummy_plot: False
         variables_to_plot: [siconc]
-        model_datasets: [HadGEM3-GC31-LL] #, HadGEM3-GC31-MM]
-        obs_datasets: [] #[HadISST]
+        model_datasets: [HadGEM3-GC31-LL, HadGEM3-GC31-MM]
+        obs_datasets: [HadISST]
         regions: ['Arctic', 'EB', 'AB']
           
   region_plot:
@@ -204,5 +204,5 @@ diagnostics:
         variables_to_plot: [siconc]
         regions: ['EB', 'AB', 'Barents_sea']
         region_centers: [[85,0], [85, 180], [75, 40]]
-        model_datasets: [HadGEM3-GC31-LL] #, HadGEM3-GC31-MM]
+        model_datasets: [HadGEM3-GC31-LL, HadGEM3-GC31-MM]
         obs_datasets: [HadISST]
