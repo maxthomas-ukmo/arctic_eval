@@ -228,6 +228,8 @@ def plot_seasonal_cycles(cfg):
 def plot_geographical_maps(cfg):
     '''Plot geographical map for a list of variables and datasets given in config dictionary from esmvaltool recipe.'''
 
+    print('Making Geographical Maps')
+    print('maps------------------------------->')
     # Print input data files
     input_data= cfg['input_data']
     for key in input_data:
@@ -239,26 +241,31 @@ def plot_geographical_maps(cfg):
     formatting = get_format_properties()
 
     # Get regions to plot
+    # Regions would only be useful here if we want zooms or Antarctic and Arctic
     regions = cfg['regions']
     if not regions:
         regions = ['Arctic']
 
     for region in regions:
-        # Loop over desired time slices
-        for time_slice in cfg['months']:
-            # Loop over variables
-            for variable in cfg['variables_to_plot']:
+        
+        # Loop over variables
+        for variable in cfg['variables_to_plot']:
 
-                for dataset in cfg['model_datasets']:
-                    # Create figure for each dataset, variable, and time slice
-                    fig = plt.figure(dpi=300)
+            for dataset in cfg['model_datasets']:
+                # Create figure for each region, dataset, and variable
+                fig = plt.figure(dpi=300)
+                # Add gridspec for the figure
+                gs = fig.add_gridspec(nrows=1, ncols=len(cfg['months']))
 
+                # Loop over desired time slices
+                for igs, time_slice in enumerate(cfg['months']):
+                
                     geo_map = GeoMap(input_data, dataset, variable, aliases=[dataset+'Mean'], region=region)
 
                     # Make a new data variable in geo_map.data. In this case we take a monthly slice
                     subset = geo_map.get_month_slice(time_slice, statistics='time_mean')
 
-                    ax = geo_map.add_map_axes(fig)
+                    ax = geo_map.add_map_axes(fig, gs[0, igs])
 
                     # Plot the subset data
                     geo_map.plot(ax, subset)
@@ -266,20 +273,23 @@ def plot_geographical_maps(cfg):
                     # Create provenance record for one variable
                     provenance_record = ProvenanceRecord(region=region, caption=geo_map.caption)
 
-                    fig_name = variable + '_' + region + '_geographical_map_' + dataset + '_' + subset + '.png'
-                    # Save figure to output dir and add it to provenance record
-                    save_object(fig, fig_name, cfg, provenance_record.record)
+                fig_name = variable + '_' + region + '_geographical_map_' + dataset + '.png'
+                # Save figure to output dir and add it to provenance record
+                save_object(fig, fig_name, cfg, provenance_record.record)
 
-            for dataset in cfg['obs_datasets']:
-                # Create figure for each dataset, variable, and time slice
-                fig = plt.figure(dpi=300)
+        for dataset in cfg['obs_datasets']:
+            # Create figure for each dataset and variable,
+            fig = plt.figure(dpi=300)
+            # Add gridspec for the figure
+            gs = fig.add_gridspec(nrows=1, ncols=len(cfg['months']))
 
+            for igs, time_slice in enumerate(cfg['months']):
                 geo_map = GeoMap(input_data, dataset, variable, aliases=['OBS'], region=region)
 
                 # Make a new data variable in geo_map.data. In this case we take a monthly slice
                 subset = geo_map.get_month_slice(time_slice, statistics='time_mean')
 
-                ax = geo_map.add_map_axes(fig)
+                ax = geo_map.add_map_axes(fig, gs[0, igs])
 
                 # Plot the subset data
                 geo_map.plot(ax, subset)
@@ -287,9 +297,12 @@ def plot_geographical_maps(cfg):
                 # Create provenance record for one variable
                 provenance_record = ProvenanceRecord(region=region, caption=geo_map.caption)
 
-                fig_name = variable + '_' + region + '_geographical_map_' + dataset + '_' + subset + '.png'
-                # Save figure to output dir and add it to provenance record
-                save_object(fig, fig_name, cfg, provenance_record.record)
+            fig_name = variable + '_' + region + '_geographical_map_' + dataset + '.png'
+            # Save figure to output dir and add it to provenance record
+            save_object(fig, fig_name, cfg, provenance_record.record)
+
+    print('Geographical Maps done')
+    print('<-----------------------------------')
 
 def plot_timeseries(cfg):
     '''Plot timeseries for a list of variables and datasets given in config dictionary from esmvaltool recipe.'''

@@ -107,22 +107,23 @@ class GeoMap(Loader):
         iris.coord_categorisation.add_month(self.data['main'], 'time', name='month')
 
         self.timerange = utils.get_timerange_from_input_data(self.input_data)
-        self.caption = utils.make_figure_caption('Map', self.variable, self.region, self.timerange)
+        self.caption = utils.make_figure_caption('Map for' + self.dataset, self.variable, self.region, self.timerange)
 
 
-    def add_map_axes(self, fig):
+    def add_map_axes(self, fig, gs_entry):
         ''' Add map axes to a figure.
 
         Keyword arguments:
         fig (matplotlib.figure) -- figure object to plot on
+        gs_entry (matplotlib.gridspec) -- gridspec entry to plot on, i.e. gs[0, 0] for the first subplot
         '''
         if self.map_parameters is None:
             self.map_parameters = {'projection': ccrs.NorthPolarStereo(),
                                    'extent': [0, 360, 60, 90],
                                    'coastlines': True,
                                    'gridlines': True}
-        
-        ax = fig.add_subplot(111, projection=self.map_parameters['projection'])
+
+        ax = fig.add_subplot(gs_entry, projection=self.map_parameters['projection'])
         ax.set_extent(self.map_parameters['extent'], ccrs.PlateCarree())
         if self.map_parameters['coastlines']:
             ax.coastlines()
@@ -131,22 +132,18 @@ class GeoMap(Loader):
         return ax
     
     def get_month_slice(self, time_slice, statistics='time_mean'):
-        # Ensure time slice is a list
-        # if not isinstance(time_slice, list):
-        #     time_slice = [time_slice]
 
-        # Make string of timeslice for variable naming
-        # time_slice_name = statistics
-        # for ts in time_slice:
-        #     time_slice_name += str(ts) 
-        # # TODO: probably this function needs rewriting 
-        # time_slice_data = utils.extract_months_using_datetime(self.data['main'], time_slice)
-
-        # Get month_abbr from time slice
-        month_str = calendar.month_abbr[time_slice]
-
-        # Subset data
-        time_slice_data = self.data['main'].extract(iris.Constraint(month=month_str))
+        # If time_slice is None, we average over the full year
+        # else we extract the month from the time slice
+        print(time_slice)
+        if time_slice == 'full_year':
+            month_str = 'full_year'
+            time_slice_data = self.data['main']
+        else:
+            # Get month_abbr from time slice
+            month_str = calendar.month_abbr[time_slice]
+            # Subset data
+            time_slice_data = self.data['main'].extract(iris.Constraint(month=month_str))
 
         if statistics == 'time_mean':
             self.data[month_str] = time_slice_data.collapsed('time', iris.analysis.MEAN)
@@ -159,11 +156,10 @@ class GeoMap(Loader):
         Keyword arguments:
         ax (matplotlib.axes) -- axis object to plot on
         '''
-        # TODO: either make data a da or rewrite this to use matplotlib
-        print('9999999999999999999999999999999999')
-        print(self.data[subset])
-        ax.pcolormesh(self.lon2d, self.lat2d, self.data[subset].data, transform=ccrs.PlateCarree(), cmap='viridis')
+
+        cm = ax.pcolormesh(self.lon2d, self.lat2d, self.data[subset].data, transform=ccrs.PlateCarree(), cmap='viridis')
         ax.set_title(self.variable + ' ' + self.dataset + ' ' + subset)
+        plt.colorbar(cm, ax=ax, orientation='horizontal', pad=0.05, label=self.variable + ' / ' + str(self.data[subset].units))
         
 class Timeseries(Loader):
     ''' Load timeseries data from a dataset and variable and provide function to plot it.
