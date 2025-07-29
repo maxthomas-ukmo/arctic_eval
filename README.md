@@ -73,7 +73,7 @@ The directory structure is:
 The key files for the sea-ice evaluation are:
 ```
 code/run_arctic_seaice.sh
-code/recipe_arctic_seaice.yaml
+code/recipe_arctic_seaice.yml
 code/diag_scripts/arctic_eval.py
 code/diag_scripts/utils.py
 code/diag_scripts/plotting.py
@@ -89,14 +89,28 @@ For example, a seasonal cycle plot of integrated sea-ice area for HadGEM3-GC3.1-
 - ```arctic_eval.py``` would loop over the regions, producing a figure for each. It would then loop over the datasets (min, mean, and max as one dataset for the model ensemble, plus one dataset for the reanalysis).
 - An instance of ```SeasonalCycle``` would be called from ```plotting.py``` for each dataset and region.
 - That instance would initalise from ```Loader```, which would find, load, and organise the relavent data. For siconc, this would include areacello as an extra dataset. It would also make and apply a region mask.
-- The ```SeasonalCycle``` instance would so all the variable specific processing, like multiplying through by area and summing.
+- The ```SeasonalCycle``` instance would so all the variable specific processing, like multiplying through by area and summing. 
 - ```arctic_eval.py``` would use the pre-defined plot function in the ```SeasonalCycle``` instance to add data to the figure, then do the provenance logging and figure saving.
 
-### Running
-### Overview of code
-### Modifying the code
-### Adding a region
+## Running
+The best way to run the code is
+```
+./run_recipe_<seaice, transports, ocean>.sh
+```
+Alternatively, the environment can be loaded and a recipe run using
+```
+esmvaltool run recipe_arctic_<seaice, transports, ocean>.yml --config_file <path to config-user.yml>
+```
+
+## Modifying the code
+The formatting of the plots can be defined in ```code/plot_formatting.yml```. This gets read into a dictionary which can be passed through the scripts to define colours etc on plots.
+
+Many things can be changed via the recipe. The regional subsetting, model datasets, observational datasets, variables, and statistics applied by ESMValTool can all be altered here. Some of these will require code alteration in the loading and plotting classed, or in ```arctic_eval.py```, others won't.
+
+To add a new region the ```get_region_indicies``` function in ```utils.py``` must be modified by adding a case with logic based on the required latitude and longitude conditions, and then added to the ```regions``` entry in the recipe files, as desired.
 
 ## Things to do
 - Create, maintain, and load some central environment
+- Define logic to process variable within plotting based on some list of final outputs, rather than input variables. This would allow, e.g., sicon to be passed to SeasonalCycle, and define in the recipe if integrated area or extent was required.
+- There's no technical reason to confine this to the Arctic. Either adding Southern Ocean regions or having a ```recipe_southernocean_<seaice, transports, ocean>.yml``` would be easy.
 
