@@ -16,19 +16,17 @@ if [ -z "$2" ]; then
 fi
 echo "Archiving recipe $recipe_name"
 
-ARCHIVE_DIR=/data/users/max.thomas/esmvaltool/esmvaltool_output/$recipe_name_for_webpage
+ARCHIVE_DIR=~/public_html/esmvaltool/$recipe_name_for_webpage
 echo "ARCHIVE_DIR: " $ARCHIVE_DIR
 
 RAW_DIR=/data/users/max.thomas/esmvaltool/esmvaltool_output/$1
 echo "RAW_DIR: " $RAW_DIR
 
 echo "Linking dir"
-mkdir -p $ARCHIVE_DIR
-cp -r $RAW_DIR/. $ARCHIVE_DIR/
 
 # Symlink to public_html
-cd /home/users/max.thomas/public_html/esmvaltool/
-ln -s $ARCHIVE_DIR .
+ln -s $RAW_DIR/. $ARCHIVE_DIR
 
+cd $ARCHIVE_DIR
 ls -l
-firefox $recipe_name_for_webpage/index.html
+firefox index.html
