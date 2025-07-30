@@ -82,20 +82,16 @@ diagnostics:
         time_start: 1979-01 # These are needed here to pass to the strait flux functions and must match the preprocessing
         time_end: 1981-12
         model_datasets: [HadGEM3-GC31-LL] #, HadGEM3-GC31-MM]
-        strait: [Fram, Barents]
-        include_salinity: False
-  # streamfunction:
-  #   description: barotropic streamfunction testing
-  #   variables:
-  #     vo: &variables
-  #       #preprocessor: BSF_testing
-  #       mip: Omon
-  #       start_year: 1979
-  #       end_year: 1981
-  #     uo: *variables
-  #     thkcello: *variables
-    # scripts:
-    #   bsf_test:
-    #     script: ~mathomas/Projects/esmvaltool/arctic_ocean_recipe/cmip6_eval/diag_scripts/arctic_eval.py
-    #     dummy_plot: True
+        # strait: [Fram, Barents, Bering, Hudson, Hudson_NW, Färöer, IF, FS, OSNAP, GSR, NIIC]
+        strait: [Fram, Barents, Bering] # Not working with -LL: Hudson, Hudson_NW, IF, Färöer, FS
+        strait_depths: # Depths for the straits in meters
+          Fram: 4000
+          Barents: 500
+          Bering: 50
+        product_cmaps:
+          heat: seismic
+          salt: copper
+          volume: brewer_PiYG_11
+        include_salinity: True
+  
     

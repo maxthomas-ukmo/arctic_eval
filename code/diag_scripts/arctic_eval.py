@@ -95,7 +95,7 @@ def plot_ocean_strait_flux_crosssection(cfg):
     for strait in cfg['strait']:
         print('IIIIIIIIIIIIIIIIII')
     # Create figure for each strait
-        fig = plt.figure(dpi=300)
+        fig = plt.figure(dpi=300, figsize=(5,10))
         # One panel for each variable, plus an extra to take the strait indicies plot
         if cfg['include_salinity']:
             gs = fig.add_gridspec(4, 1)
@@ -119,15 +119,13 @@ def plot_ocean_strait_flux_crosssection(cfg):
             provenance_record = ProvenanceRecord()
 
             # Calculate transported volume 
-            sf_params = sf_loader.make_params(strait=strait, model=model)
+            sf_params = sf_loader.make_params(strait=strait, model=model, time_start=cfg['time_start'], time_end=cfg['time_end'], depth=cfg['strait_depths'][strait])
             
 
             # Calculate temperature crosssection
             sf_params['product'] = 'T'
-            print('ttttttttttttttttttttttt')
             T_cross = sf_loader.call_strait_flux_cross_TS(sf_cross.TS_interp, sf_params)
-            print('TTTTTTTTTTTTTTTTT')
-            print(T_cross)
+
             if cfg['include_salinity']:
                 sf_params['product'] = 'S'
                 S_cross = sf_loader.call_strait_flux_cross_TS(sf_cross.TS_interp, sf_params)
@@ -136,17 +134,15 @@ def plot_ocean_strait_flux_crosssection(cfg):
 
             sf_params['product'] = 'uv'
             uv_cross = sf_loader.call_strait_flux_cross_uv(sf_cross.vel_projection, sf_params)
-            print('UUUUUUUUUUUUUUUUU')
-            print(uv_cross)
 
             # Add ancestors to provenance record
             provenance_record.add_ancestors(sf_loader.provenance_list)
 
             # Plot transports
-            sf_loader.plot_crosssection(ax1, 'uv', label='Volume transport')
-            sf_loader.plot_crosssection(ax2, 'T', label='Heat transport')
+            sf_loader.plot_crosssection(ax1, 'uv', label='Volume transport', depth=sf_params['depth'], cmap=cfg['product_cmaps']['volume'])
+            sf_loader.plot_crosssection(ax2, 'T', label='Heat transport', depth=sf_params['depth'], cmap=cfg['product_cmaps']['heat'])
             if cfg['include_salinity']:
-                sf_loader.plot_crosssection(ax3, 'S', label='Salt transport')
+                sf_loader.plot_crosssection(ax3, 'S', label='Salt transport', depth=sf_params['depth'], cmap=cfg['product_cmaps']['salt'])
 
         ax1.set_xlabel('')
         #ax2.set_xlabel('')

@@ -273,8 +273,7 @@ class StraitFluxPlotter(Loader):
         self.make_timeseries_xaxis()
         # Make dict to store eventual transports and crosssections
         self.transports = {}
-        self.crosssections = {}
-        
+        self.crosssections = {}        
 
 
     def get_strait_flux_files(self):
@@ -378,16 +377,17 @@ class StraitFluxPlotter(Loader):
         self.crosssections[parameters['product']] = T_or_S[parameters['product']]
         return self.crosssections[parameters['product']]
     
-    def make_params(self, product='heat', strait='Fram', model='HadGEM3-GC31-LL', time_start='1979-01', time_end='1981-12', Arakawa='Arakawa-C'):
+    def make_params(self, product='heat', strait='Fram', model='HadGEM3-GC31-LL', time_start='1979-01', time_end='1981-12', Arakawa='Arakawa-C', depth=4000):
         return {'product': product,
                 'strait': strait,
                 'model': model,
                 'time_start': time_start,
                 'time_end': time_end,
-                'Arakawa': Arakawa}
+                'Arakawa': Arakawa,
+                'depth': depth}
     
     def correct_units(self, transports):
-        self.units = {'heat': 'W', 'volume': 'm^3', 'salt': 'g/kg'}
+        self.units = {'heat': 'W', 'volume': 'm^3', 'salt': 'g/s'}
         for transport in transports:
             if transport == 'volume':
                 self.transports[transport] = self.transports[transport] / 1e6
@@ -395,6 +395,9 @@ class StraitFluxPlotter(Loader):
             elif transport == 'heat':
                 self.transports[transport] = self.transports[transport] / 1e12
                 self.units[transport] = 'TW'
+            elif transport == 'salt':
+                self.transports[transport] = self.transports[transport] / 1e12
+                self.units[transport] = 'Tg/s'
     
     def plot_timeseries(self, ax, transport, line_parameters=None, add_x_labels=True, add_y_labels=True, label=None):
         
@@ -417,16 +420,25 @@ class StraitFluxPlotter(Loader):
         if add_y_labels:
             ax.set_ylabel(transport +' / ' + self.units[transport])
 
-    def plot_crosssection(self, ax, crosssection, line_parameters=None, add_x_labels=True, add_y_labels=True, label=None):
+    def plot_crosssection(self, ax, crosssection, depth=None, line_parameters=None, add_x_labels=True, add_y_labels=True, label=None, cmap='viridis'):
             
+        data = self.crosssections[crosssection]
+
         if line_parameters is None:
             colour = 'k'
         else:
             colour = line_parameters['colour']
 
-        data = self.crosssections[crosssection]
-        
-        a = ax.contourf(data.x, data.depth, data.mean(dim='time'))
+        cvar = data.mean(dim='time')
+
+        if crosssection == 'uv':
+            vmax = max(abs(np.nanmin(cvar)), abs(np.nanmax(cvar))) 
+            a = ax.contourf(data.x, data.depth, cvar, vmin=-vmax, vmax=vmax, cmap=cmap)
+        else:
+            a = ax.contourf(data.x, data.depth, cvar, cmap=cmap)
+
+        if depth is not None:
+            ax.set_ylim(0, depth)
 
         ax.invert_yaxis()
 

@@ -1,6 +1,6 @@
 #!/bin/bash -l
 cd "$(dirname "$0")"
-#SBATCH --mem=20G
+#SBATCH --mem=100G
 #SBATCH --ntasks=8
 #SBATCH --output=./transport_test.log
 #SBATCH --time=60
