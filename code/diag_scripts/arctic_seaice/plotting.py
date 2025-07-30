@@ -201,20 +201,20 @@ class Timeseries(Loader):
         print(type(self.data['main'].coord('time').points))
 
         # Make time axis
-        self._make_timeseries_xaxis()
+        self.make_timeseries_xaxis()
 
         
 
 
-    def _make_timeseries_xaxis(self):
-        ''' Make the time variable for plotting.'''
-        # if self.dataset == 'HadISST': # HadISST time variable will plot fine
-        #     self.plot_time = self.data['main'].coord('time').points
-        # elif 'HadGEM' in self.dataset: # HadGEM time variable needs converting
-        #     #self.plot_time = utils.convert_cftime_to_datetime(self.data['main'].coords('time').points)
-        cftimes = self.data['main'].coord('time').units.num2date(self.data['main'].coord('time').points)
-        #self.plot_time = [datetime.datetime(d.year, d.month, d.day) for d in cftimes]
-        self.plot_time = cftimes
+    # def _make_timeseries_xaxis(self):
+    #     ''' Make the time variable for plotting.'''
+    #     # if self.dataset == 'HadISST': # HadISST time variable will plot fine
+    #     #     self.plot_time = self.data['main'].coord('time').points
+    #     # elif 'HadGEM' in self.dataset: # HadGEM time variable needs converting
+    #     #     #self.plot_time = utils.convert_cftime_to_datetime(self.data['main'].coords('time').points)
+    #     cftimes = self.data['main'].coord('time').units.num2date(self.data['main'].coord('time').points)
+    #     #self.plot_time = [datetime.datetime(d.year, d.month, d.day) for d in cftimes]
+    #     self.plot_time = cftimes
 
     def plot(self, ax, line_parameters=None, add_labels=True):
         ''' Plot the timeseries data.
@@ -403,7 +403,11 @@ class StraitFluxPlotter(Loader):
         else:
             colour = line_parameters['colour']
         
-        ax.plot(self.plot_time, self.transports[transport], colour, label=label)
+        #ax.plot(self.plot_time, self.transports[transport], colour, label=label)
+        da = xr.DataArray(self.transports[transport].data, 
+                              coords=[self.plot_time],
+                              dims=['time'])
+        da.plot.line(ax=ax, label=label, color=colour)
         
         if add_x_labels:
             ax.set_xlabel('Time')
