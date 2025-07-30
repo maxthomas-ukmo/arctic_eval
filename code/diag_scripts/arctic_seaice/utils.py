@@ -291,7 +291,6 @@ class Loader():
                 self.data['min'] = self.data['min'].collapsed(['latitude', 'longitude'], iris.analysis.SUM)
                 self.data['max'] = self.data['max'].collapsed(['latitude', 'longitude'], iris.analysis.SUM)
 
-
     def update_units(self, factor):
         ''' Update the units of the main variable and, if they exist, min and max variables. '''
         self.data['main'].data = self.data['main'].data * factor
@@ -299,6 +298,15 @@ class Loader():
             self.data['min'].data = self.data['min'].data * factor
             self.data['max'].data = self.data['max'].data * factor
 
+    def make_timeseries_xaxis(self):
+            ''' Make the time variable for plotting.'''
+            # if self.dataset == 'HadISST': # HadISST time variable will plot fine
+            #     self.plot_time = self.data['main'].coord('time').points
+            # elif 'HadGEM' in self.dataset: # HadGEM time variable needs converting
+            #     #self.plot_time = utils.convert_cftime_to_datetime(self.data['main'].coords('time').points)
+            cftimes = self.data['main'].coord('time').units.num2date(self.data['main'].coord('time').points)
+            #self.plot_time = [datetime.datetime(d.year, d.month, d.day) for d in cftimes]
+            self.plot_time = cftimes
 
 def get_format_properties(plot_formatting='/home/users/max.thomas/projects/esmvaltool/development/plot_formatting.yml', properties=['colour']):
     '''Reads format properties from a YAML file.
