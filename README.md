@@ -24,12 +24,16 @@ The *arctic_eval* environment duplicates the Met Office's internal scitools/comm
 
 The next step is to edit the ```config/config-user.yml``` file and make paths appropriate for the given user.
 
-There is a run script for each of the recipes. Once the environment is created, a user can get started by
+There is a run script for each of the recipes. Once the environment is created, a user can get started by running in a terminal
 ```
 cd code
 ./run_arctic_seaice.sh
 ```
-which loads the environment and runs ```recipe_arctic_seaice.yaml```. If the recipe runs sucessfully, terminal output should contain a path to the recipe output, like:
+or via slurm
+```
+sbatch run_arctic_seaice.sh
+```
+which is likely required for large jobs. Either of these load the environment and run ESMValTool using ```recipe_arctic_seaice.yaml```. If the recipe runs sucessfully, terminal or log output (```seaice_eval.log``` by default) should contain a path to the recipe output, like:
 ```
 INFO    Wrote recipe output to:
 file://<path/to/recipe output>/index.html

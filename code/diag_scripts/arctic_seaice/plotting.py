@@ -264,7 +264,7 @@ class StraitFluxPlotter(Loader):
     variable (str) -- variable name (short CMOR name) - this should be the t grid variable (i.e. 'thetao' or 'so')
     aliases (list) -- list of aliases for the various dataset entries (i.e. ['Mean', 'Min', 'Max']) (default [None])
     '''
-    def __init__(self, input_data, dataset, variable, aliases=[None], salinity=False):
+    def __init__(self, input_data, dataset, variable, aliases=[None], salinity=True):
         super().__init__(input_data, dataset, variable, aliases)
         # Store salinity flag, which decides if an so file is loaded to via file_s
         self.salinity = salinity
@@ -401,11 +401,7 @@ class StraitFluxPlotter(Loader):
                 self.units[transport] = 'Tg/s'
 
     def plot_timeseries(self, ax, transport, color='k', add_x_labels=True, add_y_labels=True, label=None):
-        print('WWWWWWWWWWWWWWWWWWWw')
-        print(self.transports[transport])
-        print(self.transports[transport].data)
-        print(self.plot_time)
-        #ax.plot(self.plot_time, self.transports[transport], colour, label=label)
+
         da = xr.DataArray(self.transports[transport].data, 
                               coords=[self.plot_time],
                               dims=['time'])
@@ -413,7 +409,7 @@ class StraitFluxPlotter(Loader):
         da.plot.line(ax=ax, label=label, color=color)
         
         if add_x_labels:
-            ax.set_xlabel('Time')
+            ax.set_xlabel('Date')
         else:
             ax.set_xticklabels([])
 
