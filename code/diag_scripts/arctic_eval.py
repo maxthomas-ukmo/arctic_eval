@@ -27,27 +27,30 @@ def plot_ocean_strait_flux_timeseries(cfg):
         print(key)
         print(input_data[key])
 
+    formatting = get_format_properties()
+
+    compiled_data = {}
+    for model in cfg['model_datasets']:
+        compiled_data[model] = {}
+        for strait in cfg['strait']:
+            compiled_data[model][strait] = []
+
     for strait in cfg['strait']:
-            
-        # Create figure for each strait
-        fig = plt.figure(dpi=300, figsize=(10, 10))
-        # One panel for each variable, plus an extra to take the strait indicies plot
-        if cfg['include_salinity']:
+        # Loop over model datasets
+        for model in cfg['model_datasets']:
+            # Create figure for each strait and model. This fig will also show the strait indicies
+            fig = plt.figure(dpi=300, figsize=(10,15))
+            # One panel for each variable, plus an extra to take the strait indicies plot
             gs = fig.add_gridspec(4, 1)
             ax1 = fig.add_subplot(gs[0, 0])
             ax2 = fig.add_subplot(gs[1, 0])
             ax3 = fig.add_subplot(gs[2, 0])
-            ax4 = fig.add_subplot(gs[3, 0])
-        else:
-            gs = fig.add_gridspec(3, 1)
-            ax1 = fig.add_subplot(gs[0, 0])
-            ax2 = fig.add_subplot(gs[1, 0])
-            ax3 = fig.add_subplot(gs[2, 0])
+            ax4 = fig.add_subplot(gs[3, 0]) # this is just a dummy axis otherwise the auto-generated map get put ontop of a timeseries
+            
+            color = formatting['dataset'][model]['colour']
 
-        # Loop over model datasets
-        for model in cfg['model_datasets']:
             # Load in data for primary variable (salinity flag true to search for a so file path too)
-            sf_loader = StraitFluxPlotter(input_data, model, 'thetao', salinity=cfg['include_salinity'])
+            sf_loader = StraitFluxPlotter(input_data, model, 'thetao')
 
             # Make provenance record
             provenance_record = ProvenanceRecord()
@@ -56,10 +59,9 @@ def plot_ocean_strait_flux_timeseries(cfg):
             #sf_params = sf_loader.make_params(product='ice', Arakawa='Arakawa-B')
             sf_params = sf_loader.make_params(product='heat', strait=strait, model=model)
             heat_transport = sf_loader.call_strait_flux_integrated(sf_line.transports, sf_params)
-            if cfg['include_salinity']:
-                # Calculate transported salt
-                sf_params['product'] = 'salt'
-                salt_transport = sf_loader.call_strait_flux_integrated(sf_line.transports, sf_params)
+            # Calculate transported salt
+            sf_params['product'] = 'salt'
+            salt_transport = sf_loader.call_strait_flux_integrated(sf_line.transports, sf_params)
 
             # Calculate transported volume
             sf_params['product'] = 'volume'
@@ -71,19 +73,49 @@ def plot_ocean_strait_flux_timeseries(cfg):
             provenance_record.add_ancestors(sf_loader.provenance_list)
 
             # Plot transports
-            sf_loader.plot_timeseries(ax1, 'volume', label='Volume transport')
-            sf_loader.plot_timeseries(ax2, 'heat', label='Heat transport')
-            if cfg['include_salinity']:
-                sf_loader.plot_timeseries(ax3, 'salt', label='Salt transport')
+            sf_loader.plot_timeseries(ax1, 'volume', label='Volume transport', color=color, add_x_labels=False)
+            sf_loader.plot_timeseries(ax2, 'heat', label='Heat transport', color=color, add_x_labels=False)
+            sf_loader.plot_timeseries(ax3, 'salt', label='Salt transport', color=color, add_x_labels=True)
 
-        ax1.set_xlabel('Date')
-        ax2.set_xlabel('Date')
-        #ax4.set_title('')
-        # Save figure to output dir and add it to provenance record
-        #ax3.set_title('Map of strait indicies')
+            # Add data to compiled data
+            compiled_data[model][strait] = sf_loader
+
+
+            # Save figure to output dir and add it to provenance record
+            #ax3.set_title('Map of strait indicies')
+            fig.suptitle('Timeseries of fluxes throug ' + strait + ' strait for ' + model)
+            fig.tight_layout()
+            save_object(fig, strait + '_' + model + '_transports_timeseries.png', cfg, provenance_record.record)
+
+    # ================================================
+    # Add figure for each strait with multiple models
+
+    for strait in cfg['strait']:
+        # Create figure for each strait and model. This fig will also show the strait indicies
+        fig = plt.figure(dpi=300, figsize=(10,15))
+        # One panel for each variable
+        gs = fig.add_gridspec(4, 1)
+        ax1 = fig.add_subplot(gs[0, 0])
+        ax2 = fig.add_subplot(gs[1, 0])
+        ax3 = fig.add_subplot(gs[2, 0])
+
+
+        for model in cfg['model_datasets']:
+            color = formatting['dataset'][model]['colour']
+            # Plot volume transport for each model and strait
+            sf_loader = compiled_data[model][strait]
+            sf_loader.plot_timeseries(ax1, 'volume', label=model + ' volume transport', color=color, add_x_labels=False)
+            sf_loader.plot_timeseries(ax2, 'heat', label=model + ' heat transport', color=color, add_x_labels=False)
+            sf_loader.plot_timeseries(ax3, 'salt', label=model + ' salt transport', color=color, add_x_labels=True)
+
+            provenance_record = ProvenanceRecord()
+            # Add ancestors to provenance record
+            provenance_record.add_ancestors(sf_loader.provenance_list)
+        
         fig.suptitle('Timeseries of fluxes throug ' + strait + ' strait')
         fig.tight_layout()
         save_object(fig, strait + '_transports_timeseries.png', cfg, provenance_record.record)
+
 
 def plot_ocean_strait_flux_crosssection(cfg):
     print('SF crosssection')
@@ -93,27 +125,19 @@ def plot_ocean_strait_flux_crosssection(cfg):
         print(input_data[key])
 
     for strait in cfg['strait']:
-        print('IIIIIIIIIIIIIIIIII')
-    # Create figure for each strait
-        fig = plt.figure(dpi=300, figsize=(5,10))
-        # One panel for each variable, plus an extra to take the strait indicies plot
-        if cfg['include_salinity']:
+        # Loop over model datasets
+        for model in cfg['model_datasets']:
+            # Create figure for each strait and model
+            fig = plt.figure(dpi=300, figsize=(5,10))
+            # One panel for each variable
             gs = fig.add_gridspec(4, 1)
             ax1 = fig.add_subplot(gs[0, 0])
             ax2 = fig.add_subplot(gs[1, 0])
             ax3 = fig.add_subplot(gs[2, 0])
-            #ax4 = fig.add_subplot(gs[3, 0])
-        else:
-            gs = fig.add_gridspec(3, 1)
-            ax1 = fig.add_subplot(gs[0, 0])
-            ax2 = fig.add_subplot(gs[1, 0])
-            #ax3 = fig.add_subplot(gs[2, 0])
 
-        # Loop over model datasets
-        for model in cfg['model_datasets']:
-            print('KKKKKKKKKKKKKKKKKKKKKKKKKK')
+
             # Load in data for primary variable (salinity flag true to search for a so file path too)
-            sf_loader = StraitFluxPlotter(input_data, model, 'thetao', salinity=cfg['include_salinity'])
+            sf_loader = StraitFluxPlotter(input_data, model, 'thetao')
 
             # Make provenance record
             provenance_record = ProvenanceRecord()
@@ -126,9 +150,8 @@ def plot_ocean_strait_flux_crosssection(cfg):
             sf_params['product'] = 'T'
             T_cross = sf_loader.call_strait_flux_cross_TS(sf_cross.TS_interp, sf_params)
 
-            if cfg['include_salinity']:
-                sf_params['product'] = 'S'
-                S_cross = sf_loader.call_strait_flux_cross_TS(sf_cross.TS_interp, sf_params)
+            sf_params['product'] = 'S'
+            S_cross = sf_loader.call_strait_flux_cross_TS(sf_cross.TS_interp, sf_params)
             # Correct units
             # sf_loader.correct_units(['volume','heat'])
 
@@ -139,21 +162,14 @@ def plot_ocean_strait_flux_crosssection(cfg):
             provenance_record.add_ancestors(sf_loader.provenance_list)
 
             # Plot transports
-            sf_loader.plot_crosssection(ax1, 'uv', label='Volume transport', depth=sf_params['depth'], cmap=cfg['product_cmaps']['volume'])
-            sf_loader.plot_crosssection(ax2, 'T', label='Heat transport', depth=sf_params['depth'], cmap=cfg['product_cmaps']['heat'])
-            if cfg['include_salinity']:
-                sf_loader.plot_crosssection(ax3, 'S', label='Salt transport', depth=sf_params['depth'], cmap=cfg['product_cmaps']['salt'])
+            sf_loader.plot_crosssection(ax1, 'uv', label='Volume transport', depth=sf_params['depth'], cmap=cfg['product_cmaps']['volume'], add_x_labels=False)
+            sf_loader.plot_crosssection(ax2, 'T', label='Heat transport', depth=sf_params['depth'], cmap=cfg['product_cmaps']['heat'], add_x_labels=False)
+            sf_loader.plot_crosssection(ax3, 'S', label='Salt transport', depth=sf_params['depth'], cmap=cfg['product_cmaps']['salt'], add_x_labels=True)
 
-        ax1.set_xlabel('')
-        #ax2.set_xlabel('')
-        ax2.set_xlabel('Along strait distance / m')
-
-
-        # Save figure to output dir and add it to provenance record
-        # ax3.set_title('Map of strait indicies')
-        fig.suptitle('Strait flux cross - ' + strait)
-        fig.tight_layout()
-        save_object(fig, strait + '_cross.png', cfg, provenance_record.record)
+            # Save figure to output dir and add it to provenance record
+            fig.suptitle(model + ' - ' + strait)
+            fig.tight_layout()
+            save_object(fig, strait + '_' + model + '_cross.png', cfg, provenance_record.record)
 
 def plot_seasonal_cycles(cfg):
     '''Plot seasonal cycle for a list of variables and datasets given in config dictionary from esmvaltool recipe.'''

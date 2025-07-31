@@ -11,6 +11,7 @@ import numpy as np
 import arctic_seaice.utils as utils
 
 from arctic_seaice.utils import Loader
+from matplotlib.colors import TwoSlopeNorm
 
 class SeasonalCycle(Loader):
     ''' 
@@ -263,7 +264,7 @@ class StraitFluxPlotter(Loader):
     variable (str) -- variable name (short CMOR name) - this should be the t grid variable (i.e. 'thetao' or 'so')
     aliases (list) -- list of aliases for the various dataset entries (i.e. ['Mean', 'Min', 'Max']) (default [None])
     '''
-    def __init__(self, input_data, dataset, variable, aliases=[None], salinity=False):
+    def __init__(self, input_data, dataset, variable, aliases=[None], salinity=True):
         super().__init__(input_data, dataset, variable, aliases)
         # Store salinity flag, which decides if an so file is loaded to via file_s
         self.salinity = salinity
@@ -398,22 +399,17 @@ class StraitFluxPlotter(Loader):
             elif transport == 'salt':
                 self.transports[transport] = self.transports[transport] / 1e12
                 self.units[transport] = 'Tg/s'
-    
-    def plot_timeseries(self, ax, transport, line_parameters=None, add_x_labels=True, add_y_labels=True, label=None):
-        
-        if line_parameters is None:
-            colour = 'k'
-        else:
-            colour = line_parameters['colour']
-        
-        #ax.plot(self.plot_time, self.transports[transport], colour, label=label)
+
+    def plot_timeseries(self, ax, transport, color='k', add_x_labels=True, add_y_labels=True, label=None):
+
         da = xr.DataArray(self.transports[transport].data, 
                               coords=[self.plot_time],
                               dims=['time'])
-        da.plot.line(ax=ax, label=label, color=colour)
+        
+        da.plot.line(ax=ax, label=label, color=color)
         
         if add_x_labels:
-            ax.set_xlabel('Time')
+            ax.set_xlabel('Date')
         else:
             ax.set_xticklabels([])
 
@@ -433,9 +429,19 @@ class StraitFluxPlotter(Loader):
 
         if crosssection == 'uv':
             vmax = max(abs(np.nanmin(cvar)), abs(np.nanmax(cvar))) 
-            a = ax.contourf(data.x, data.depth, cvar, vmin=-vmax, vmax=vmax, cmap=cmap)
-        else:
-            a = ax.contourf(data.x, data.depth, cvar, cmap=cmap)
+            a = ax.contourf(data.x / 1000, data.depth, cvar, vmin=-vmax, vmax=vmax, levels=np.linspace(-vmax,vmax,20), cmap=cmap)
+        elif crosssection == 'T':
+            tmin, tmax = -2, 8
+            levels = np.concatenate([
+                np.linspace(tmin, 0, 10, endpoint=False),
+                np.linspace(0, tmax, 20)
+            ])
+            norm = TwoSlopeNorm(vmin=tmin, vcenter=0, vmax=tmax)
+            a = ax.contourf(data.x / 1000, data.depth, cvar, norm=norm, levels=levels, cmap=cmap)
+        elif crosssection == 'S':
+            smin, smax = 29, 35.5
+            levels = np.linspace(smin, smax, 60)
+            a = ax.contourf(data.x / 1000, data.depth, cvar, vmin=smin, vmax=smax, levels=levels, cmap=cmap)
 
         if depth is not None:
             ax.set_ylim(0, depth)
@@ -445,12 +451,14 @@ class StraitFluxPlotter(Loader):
         plt.colorbar(a, ax=ax)
 
         if add_x_labels:
-            ax.set_xlabel('Cross-section')
+            ax.set_xlabel('along section distance / km')
         else:
             ax.set_xticklabels([])
 
         if add_y_labels:
             ax.set_ylabel('depth / z')
+
+        ax.set_facecolor('lightgrey')
     
 class RegionPlotter(Loader):
     ''' Calculate region masks from a dataset and allow plotting as a QC figure. We only need to do this once per model.
