@@ -399,19 +399,18 @@ class StraitFluxPlotter(Loader):
             elif transport == 'salt':
                 self.transports[transport] = self.transports[transport] / 1e12
                 self.units[transport] = 'Tg/s'
-    
-    def plot_timeseries(self, ax, transport, line_parameters=None, add_x_labels=True, add_y_labels=True, label=None):
-        
-        if line_parameters is None:
-            colour = 'k'
-        else:
-            colour = line_parameters['colour']
-        
+
+    def plot_timeseries(self, ax, transport, color='k', add_x_labels=True, add_y_labels=True, label=None):
+        print('WWWWWWWWWWWWWWWWWWWw')
+        print(self.transports[transport])
+        print(self.transports[transport].data)
+        print(self.plot_time)
         #ax.plot(self.plot_time, self.transports[transport], colour, label=label)
         da = xr.DataArray(self.transports[transport].data, 
                               coords=[self.plot_time],
                               dims=['time'])
-        da.plot.line(ax=ax, label=label, color=colour)
+        
+        da.plot.line(ax=ax, label=label, color=color)
         
         if add_x_labels:
             ax.set_xlabel('Time')

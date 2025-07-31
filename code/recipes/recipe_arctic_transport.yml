@@ -22,7 +22,7 @@ documentation:
 # Model problems
 datasets:
   - {dataset: HadGEM3-GC31-LL, project: CMIP6, grid: gn}
-#  - {dataset: HadGEM3-GC31-MM, project: CMIP6, grid: gn}
+  - {dataset: HadGEM3-GC31-MM, project: CMIP6, grid: gn}
 #  - {dataset: HadGEM3-GC31-LL, project: CMIP6, mip: Omon, exp: historical, ensemble: r1i1p1f3, grid: gn}
 #  - {dataset: HadGEM3-GC31-MM, project: CMIP6, mip: SImon, exp: historical, ensemble: r*i1p1f3, grid: gn}
 
@@ -81,7 +81,7 @@ diagnostics:
         dummy_plot: False
         time_start: 1979-01 # These are needed here to pass to the strait flux functions and must match the preprocessing
         time_end: 1981-12
-        model_datasets: [HadGEM3-GC31-LL] #, HadGEM3-GC31-MM]
+        model_datasets: [HadGEM3-GC31-LL, HadGEM3-GC31-MM]
         # strait: [Fram, Barents, Bering, Hudson, Hudson_NW, Färöer, IF, FS, OSNAP, GSR, NIIC]
         strait: [Fram, Barents, Bering] # Not working with -LL: Hudson, Hudson_NW, IF, Färöer, FS
         strait_depths: # Depths for the straits in meters
