@@ -124,7 +124,7 @@ diagnostics:
         preprocessor: extract_whole_arctic
     scripts:
       seasonal_cycle:
-        script: /home/users/max.thomas/projects/arctic_eval/code/diag_scripts/arctic_eval.py
+        script: ~/arctic_eval/code/diag_scripts/arctic_eval.py
         dummy_plot: False
         variables_to_plot: [siconc] #, sivol]
         model_datasets: [HadGEM3-GC31-LL] #, HadGEM3-GC31-MM]
@@ -148,7 +148,7 @@ diagnostics:
           -  {dataset: HadISST, project: OBS, mip: OImon, tier: 2, type: reanaly, version: 1, ensemble: '', grid: ''}
     scripts:
       geo_map_march_sept:
-        script: /home/users/max.thomas/projects/arctic_eval/code/diag_scripts/arctic_eval.py
+        script: ~/arctic_eval/code/diag_scripts/arctic_eval.py
         dummy_plot: False
         variables_to_plot: [siconc]
         regions: ['Arctic']
@@ -177,7 +177,7 @@ diagnostics:
           preprocessor: extract_whole_arctic
     scripts:
       timeseries:
-        script: /home/users/max.thomas/projects/arctic_eval/code/diag_scripts/arctic_eval.py
+        script: ~/arctic_eval/code/diag_scripts/arctic_eval.py
         dummy_plot: False
         variables_to_plot: [siconc]
         model_datasets: [HadGEM3-GC31-LL] #, HadGEM3-GC31-MM]
@@ -199,7 +199,7 @@ diagnostics:
           -  {dataset: HadISST, project: OBS, mip: OImon, tier: 2, type: reanaly, version: 1, ensemble: '', grid: ''}
     scripts:
       regions:
-        script: /home/users/max.thomas/projects/arctic_eval/code/diag_scripts/arctic_eval.py
+        script: ~/arctic_eval/code/diag_scripts/arctic_eval.py
         dummy_plot: False
         variables_to_plot: [siconc]
         regions: ['EB', 'AB', 'Barents_sea']
