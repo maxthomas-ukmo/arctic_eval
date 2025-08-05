@@ -17,11 +17,11 @@
 
 # Destination directory where all output will be written
 # Includes log files and performance stats.
-output_dir: /data/users/max.thomas/esmvaltool/esmvaltool_output
+output_dir: $DATADIR/esmvaltool/esmvaltool_output
 
 # Auxiliary data directory
 # Used by some recipes to look for additional datasets.
-auxiliary_data_dir: /data/users/max.thomas/esmvaltool/auxiliary_data
+auxiliary_data_dir: $DATADIR/esmvaltool/auxiliary_data
 
 # Automatic data download from ESGF --- [never]/when_missing/always
 # Use automatic download of missing CMIP3, CMIP5, CMIP6, CORDEX, and obs4MIPs
@@ -37,7 +37,7 @@ search_esgf: never
 # Make sure to use a directory where you can store multiple GBs of data. Your
 # home directory on a HPC is usually not suited for this purpose, so please
 # change the default value in this case!
-download_dir: /data/users/max.thomas/esmvaltool/climate_data
+download_dir: $DATADIR/esmvaltool/climate_data
 
 # Run at most this many tasks in parallel --- [null]/1/2/3/4/...
 # Set to ``null`` to use the number of available CPUs. If you run out of
@@ -88,7 +88,7 @@ profile_diagnostic: false
 # via ``search_esgf``. Lists are also possible. For site-specific entries and
 # more examples, see below. Comment out these when using a site-specific path.
 #rootpath:
-#  default: /data/users/max.thomas/esmvaltool/climate_data
+#  default: $DATADIR/esmvaltool/climate_data
 
 # Directory structure for input data --- [default]/ESGF/BADC/DKRZ/ETHZ/etc.
 # This default setting will work if files have been downloaded by ESMValTool
