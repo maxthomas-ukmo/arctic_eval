@@ -5,3 +5,5 @@ dataset:
     colour: 'b'
   HadISST:
     colour: 'k'
+  PIOMAS:
+    colour: 'k'

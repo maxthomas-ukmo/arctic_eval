@@ -261,7 +261,7 @@ class Loader():
         print('Multiplying %s by areacello.' % self.variable)
         # self.data['main'] = self.data['main'] * self.data['areacello']
         if self.dataset == 'HadISST':
-            print('SeasonalCycle, _multiply_by_area: passing as HadISST does not have areacello')
+            print('Loader, _multiply_by_area: passing as %s does not have areacello' % self.dataset)
             self.multiplied_by_area = False
         else:
             self.data['main'].data = self.data['main'].data * self.data['areacello'].data
@@ -280,7 +280,7 @@ class Loader():
         '''
         print('Summing %s over area.' % self.variable)
         if self.dataset == 'HadISST':
-            print('SeasonalCycle, _sum_over_area: summing and multiplying by area simultaneously as HadISST has no areacello')
+            print('Loader, _sum_over_area: summing and multiplying by area simultaneously as %s has no areacello' % self.dataset)
             self.data['main'] = area_statistics(self.data['main'], operator='sum')
             self.multiplied_by_area = True
         else:
@@ -306,16 +306,19 @@ class Loader():
             #self.plot_time = [datetime.datetime(d.year, d.month, d.day) for d in cftimes]
             self.plot_time = cftimes
 
-def get_format_properties(plot_formatting='/home/users/max.thomas/projects/esmvaltool/development/plot_formatting.yml', properties=['colour']):
+# TODO: this isn't the right place to define this path. need to think about how it should be done in final form
+def get_format_properties(plot_formatting='~/arctic_eval/code/plot_formatting.yml', properties=['colour']):
     '''Reads format properties from a YAML file.
     
     Args:
-        plot_formats (str): Path to the YAML file containing the format properties (default: 'plot_formatter.yml').
-        
-    Returns:
+            plot_formats (str): Path to the YAML file containing the format properties (default: 'plot_formatting.yml').
+            
+        Returns:
         dict: Dictionary containing the format properties.
     '''
-    with open(plot_formatting, 'r') as stream:
+    path = os.path.expanduser(plot_formatting)
+
+    with open(path, 'r') as stream:
         try:
             return yaml.safe_load(stream)
         except yaml.YAMLError as exc:

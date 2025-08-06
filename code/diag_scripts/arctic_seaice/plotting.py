@@ -201,8 +201,8 @@ class Timeseries(Loader):
         elif self.variable == 'sithick':
             self.multiply_by_area()
             self.sum_over_area()
-            #self.update_units(10**-14)
-            self.yvar_description = 'sum of sea ice volume [m^3]'
+            self.update_units(10**-12) # units are m3, so we multiply by 10**-12 to get 1000.km3
+            self.yvar_description = 'sum of sea ice volume [1000.km^3]'
 
         # Make caption for the figure
         self.caption = utils.make_figure_caption(self.plot_description, self.yvar_description, self.region, self.timerange)
@@ -250,7 +250,7 @@ class Timeseries(Loader):
         
         if add_labels:
             ax.set_xlabel('Time')
-            ax.set_ylabel(self.variable)
+            ax.set_ylabel(self.yvar_description)
 
 class StraitFluxPlotter(Loader):
     ''' Load strait flux data from a dataset and variable and provide function to plot it.
