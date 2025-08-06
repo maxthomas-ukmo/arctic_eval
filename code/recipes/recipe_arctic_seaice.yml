@@ -23,8 +23,6 @@ documentation:
 datasets:
   - {dataset: HadGEM3-GC31-LL, project: CMIP6}
   - {dataset: HadGEM3-GC31-MM, project: CMIP6}
-#  - {dataset: HadGEM3-GC31-LL, project: CMIP6, mip: SImon, exp: historical, ensemble: r*i1p1f3, grid: gn}
-#  - {dataset: HadGEM3-GC31-MM, project: CMIP6, mip: SImon, exp: historical, ensemble: r*i1p1f3, grid: gn}
 
 preprocessors:
 
@@ -50,22 +48,16 @@ preprocessors:
   # monthly means for each gridcell in arctic
   arctic_gs_monthmean:
     # extract Arctic
-    <<: *extract_whole_arctic_preprocessor
-    # # get gridcell areas
-    # derive:
-    #   units: m2
-    #   short_name: areacello
-    #   long_name: Ocean Grid-Cell Area
-    # take month means
-    climate_statistics:
+    <<: *extract_whole_arctic_preprocessor 
+    climate_statistics: # calculate montly means
       operator: mean
       period: month
-    # get ensemble statistics for single model
-    multi_model_statistics:
+    multi_model_statistics: # calculate ensemble statistics
       span: full
       statistics: [mean, min, max]
-      groupby: [dataset]
-    
+      groupby: [dataset] # this is needed to get an ensemble of a single model
+
+# TODO: either use extract_whole_arctic_preprocessor here or replace the anchors above, for consistency    
   2D_map:
     extract_region:
       start_longitude: 0
@@ -101,8 +93,14 @@ preprocessors:
       
     
 diagnostics:
+
+#=====================================================================
+# Seasonal cycle
+# Gridded, monthly climatology data for model ensembles is passed to the diagnostics.
+# PIOMAS and HadISST are available for comparison.
+#=====================================================================
   seasonal_cycle:
-    description: Seasonal cycle of integrated sea-ice area
+    description: Seasonal cycles
     variables:
       siconc: &seasonalcycle_var
         mip: SImon
@@ -111,9 +109,7 @@ diagnostics:
         grid: gn
         start_year: 1979
         end_year: 1982
-        #preprocessor: whole_arctic_sum # this does the summing for the region passed to the preprocessor
-        preprocessor: arctic_gs_monthmean # this excludes the sum
-        #convert_units: 1e6 km2
+        preprocessor: arctic_gs_monthmean
         additional_datasets:
           -  {dataset: HadISST, project: OBS, mip: OImon, tier: 2, type: reanaly, version: 1, ensemble: '', grid: '', alias: OBS_HadISST}
       areacello:
@@ -140,7 +136,11 @@ diagnostics:
           siconc: HadISST
           sithick: PIOMAS
         variables_to_plot_obs: [siconc, sithick]
+#=====================================================================
 
+#======================================================================
+# Maps
+#======================================================================
   maps:
     description: Maps of March and September sea-ice concentration
     variables:
@@ -172,8 +172,12 @@ diagnostics:
           siconc: [0, 100]
           sithick: [0, 7]
         variables_to_plot_obs: [siconc, sithick]
-        months: [3, 9]        
+        months: [3, 9]   
+#======================================================================
 
+#======================================================================
+# Time series
+#======================================================================
   timeseries:
     description: Time series of integrated variables
     variables:
@@ -210,7 +214,11 @@ diagnostics:
           sithick: PIOMAS
         variables_to_plot_obs: [siconc, sithick]
         regions: ['Arctic', 'EB', 'AB']
-          
+#======================================================================
+
+#======================================================================
+# Region plot
+#======================================================================
   region_plot:
     description: Regions used for subsetting
     variables:
@@ -221,7 +229,7 @@ diagnostics:
         grid: gn
         start_year: 1979
         end_year: 1980
-        preprocessor: 2D_map # this does the summing for the region passed to the preprocessor
+        preprocessor: 2D_map 
         additional_datasets:
           -  {dataset: HadISST, project: OBS, mip: OImon, tier: 2, type: reanaly, version: 1, ensemble: '', grid: '', alias: OBS_HadISST}
       areacello:
@@ -246,3 +254,4 @@ diagnostics:
           HadGEM3-GC31-MM: siconc
           HadISST: siconc
           PIOMAS: areacello
+#======================================================================
