@@ -22,7 +22,7 @@ documentation:
 # Model problems
 datasets:
   - {dataset: HadGEM3-GC31-LL, project: CMIP6}
-#  - {dataset: HadGEM3-GC31-MM, project: CMIP6}
+  - {dataset: HadGEM3-GC31-MM, project: CMIP6}
 #  - {dataset: HadGEM3-GC31-LL, project: CMIP6, mip: SImon, exp: historical, ensemble: r*i1p1f3, grid: gn}
 #  - {dataset: HadGEM3-GC31-MM, project: CMIP6, mip: SImon, exp: historical, ensemble: r*i1p1f3, grid: gn}
 
@@ -141,9 +141,7 @@ diagnostics:
         grid: gn
         start_year: 1979
         end_year: 1982
-        #preprocessor: whole_arctic_sum # this does the summing for the region passed to the preprocessor
         preprocessor: 2D_map # this excludes the sum
-        #convert_units: 1e6 km2
         additional_datasets:
           -  {dataset: HadISST, project: OBS, mip: OImon, tier: 2, type: reanaly, version: 1, ensemble: '', grid: ''}
       sithick: 
@@ -156,8 +154,7 @@ diagnostics:
         dummy_plot: False
         variables_to_plot: [siconc, sithick]
         regions: ['Arctic']
-        model_datasets: [HadGEM3-GC31-LL] #, HadGEM3-GC31-MM]
-        # TODO: need some way to specify an obs for a variable, otherwise, eg, sivol looks for HaDISST too
+        model_datasets: [HadGEM3-GC31-LL, HadGEM3-GC31-MM]
         obs_datasets: 
           siconc: HadISST
           sithick: PIOMAS
