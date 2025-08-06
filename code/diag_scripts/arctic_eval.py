@@ -473,12 +473,15 @@ def plot_regions(cfg):
         print('==============================================')
 
     # for imodel, model in enumerate(models):
-    for dataset in cfg['model_datasets']:
+    for dataset in cfg['masks_to_derive']:
+
+        variable = cfg['derive_mask_from'][dataset]
+
         fig = plt.figure(dpi=300)
         # create a provenance record for the regions fig
         provenance_record = ProvenanceRecord()
 
-        region_plotter = RegionPlotter(input_data, dataset, 'siconc', cfg['regions'], cfg['region_centers'])
+        region_plotter = RegionPlotter(input_data, dataset, variable, cfg['regions'], cfg['region_centers'])
         ax = region_plotter.add_map_axes(fig)
         region_plotter.plot_all_regions(ax)
 
@@ -487,19 +490,19 @@ def plot_regions(cfg):
         # Save figure to output dir and add it to provenance record
         save_object(fig, dataset +'_regions.png', cfg, provenance_record.record)
 
-    for dataset in cfg['obs_datasets']:
-        fig = plt.figure(dpi=300)
-        # create a provenance record for the regions fig
-        provenance_record = ProvenanceRecord()
+    # for dataset in cfg['obs_datasets']:
+    #     fig = plt.figure(dpi=300)
+    #     # create a provenance record for the regions fig
+    #     provenance_record = ProvenanceRecord()
 
-        region_plotter = RegionPlotter(input_data, dataset, 'siconc', cfg['regions'], cfg['region_centers'])
-        ax = region_plotter.add_map_axes(fig)
-        region_plotter.plot_all_regions(ax)
+    #     region_plotter = RegionPlotter(input_data, dataset, 'siconc', cfg['regions'], cfg['region_centers'])
+    #     ax = region_plotter.add_map_axes(fig)
+    #     region_plotter.plot_all_regions(ax)
 
-        # Add caption to provenance record
-        provenance_record.record['caption'] = region_plotter.caption
-        # Save figure to output dir and add it to provenance record
-        save_object(fig, dataset +'_regions.png', cfg, provenance_record.record)
+    #     # Add caption to provenance record
+    #     provenance_record.record['caption'] = region_plotter.caption
+    #     # Save figure to output dir and add it to provenance record
+    #     save_object(fig, dataset +'_regions.png', cfg, provenance_record.record)
 
 
 def main(cfg):
