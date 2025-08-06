@@ -278,6 +278,8 @@ def plot_geographical_maps(cfg):
             # Add gridspec for the figure
             gs = fig.add_gridspec(nrows=nrows, ncols=len(cfg['months']))
 
+            range=cfg['cbar_ranges'].get(variable, None)
+
             irow = 0
             for dataset in cfg['model_datasets']:
 
@@ -292,7 +294,7 @@ def plot_geographical_maps(cfg):
                     ax = geo_map.add_map_axes(fig, gs[irow, igs])
 
                     # Plot the subset data
-                    geo_map.plot(ax, subset)
+                    geo_map.plot(ax, subset, range=range)
 
                 irow += 1
 
@@ -328,10 +330,11 @@ def plot_geographical_maps(cfg):
                     ax = geo_map.add_map_axes(fig, gs[irow, igs])
 
                     # Plot the subset data
-                    geo_map.plot(ax, subset)
+                    geo_map.plot(ax, subset, range=range)
 
+            caption = 'Geographical map of ' + variable + ' for region ' + region + ' and timerange ' + geo_map.timerange
             # Create provenance record for the figure
-            provenance_record = ProvenanceRecord(region=region, caption=geo_map.caption)
+            provenance_record = ProvenanceRecord(region=region, caption=caption)
 
             fig_name = variable + '_' + region + '_geographical_map.png'
             fig.tight_layout()

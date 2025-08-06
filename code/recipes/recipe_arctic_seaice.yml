@@ -161,7 +161,10 @@ diagnostics:
         obs_datasets: 
           siconc: HadISST
           sithick: PIOMAS
-        variables_to_plot_obs: [siconc] #, sithick]
+        cbar_ranges:
+          siconc: [0, 100]
+          sithick: [0, 7]
+        variables_to_plot_obs: [siconc, sithick]
         months: [3, 9]        
 
   # timeseries:
