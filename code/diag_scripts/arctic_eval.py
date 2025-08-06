@@ -262,12 +262,24 @@ def plot_geographical_maps(cfg):
         
         # Loop over variables
         for variable in cfg['variables_to_plot']:
+            provenance_record = ProvenanceRecord(region=region)
 
+            # Create figure for each region and variable
+            fig = plt.figure(dpi=300, figsize=(10, 10))
+            
+            # Decide on gridspec for figure
+            if variable in cfg['variables_to_plot_obs']:
+                n_obs = 1
+            else:
+                n_obs = 0           
+            n_mdl = len(cfg['model_datasets'])
+            nrows = n_obs + n_mdl
+
+            # Add gridspec for the figure
+            gs = fig.add_gridspec(nrows=nrows, ncols=len(cfg['months']))
+
+            irow = 0
             for dataset in cfg['model_datasets']:
-                # Create figure for each region, dataset, and variable
-                fig = plt.figure(dpi=300)
-                # Add gridspec for the figure
-                gs = fig.add_gridspec(nrows=1, ncols=len(cfg['months']))
 
                 # Loop over desired time slices
                 for igs, time_slice in enumerate(cfg['months']):
@@ -277,25 +289,27 @@ def plot_geographical_maps(cfg):
                     # Make a new data variable in geo_map.data. In this case we take a monthly slice
                     subset = geo_map.get_month_slice(time_slice, statistics='time_mean')
 
-                    ax = geo_map.add_map_axes(fig, gs[0, igs])
+                    ax = geo_map.add_map_axes(fig, gs[irow, igs])
 
                     # Plot the subset data
                     geo_map.plot(ax, subset)
 
-                    # Create provenance record for one variable
-                    provenance_record = ProvenanceRecord(region=region, caption=geo_map.caption)
+                irow += 1
 
-                fig_name = variable + '_' + region + '_geographical_map_' + dataset + '.png'
-                # Save figure to output dir and add it to provenance record
-                save_object(fig, fig_name, cfg, provenance_record.record)
+                    # Create provenance record for one variable
+                    # provenance_record = ProvenanceRecord(region=region, caption=geo_map.caption)
+
+                # fig_name = variable + '_' + region + '_geographical_map_' + dataset + '.png'
+                # # Save figure to output dir and add it to provenance record
+                # save_object(fig, fig_name, cfg, provenance_record.record)
 
             # If the variable has been specified to plot an observational dataset, we plot that here
             if variable in cfg['variables_to_plot_obs']:
                 obs_dataset = cfg['obs_datasets'][variable]
-                # Create figure for each region, dataset, and variable
-                fig = plt.figure(dpi=300)
-                # Add gridspec for the figure
-                gs = fig.add_gridspec(nrows=1, ncols=len(cfg['months']))
+                # # Create figure for each region, dataset, and variable
+                # fig = plt.figure(dpi=300)
+                # # Add gridspec for the figure
+                # gs = fig.add_gridspec(nrows=1, ncols=len(cfg['months']))
 
                 # Loop over desired time slices
                 for igs, time_slice in enumerate(cfg['months']):
@@ -311,17 +325,18 @@ def plot_geographical_maps(cfg):
                     # Make a new data variable in geo_map.data. In this case we take a monthly slice
                     subset = geo_map.get_month_slice(time_slice, statistics='time_mean')
 
-                    ax = geo_map.add_map_axes(fig, gs[0, igs])
+                    ax = geo_map.add_map_axes(fig, gs[irow, igs])
 
                     # Plot the subset data
                     geo_map.plot(ax, subset)
 
-                # Create provenance record for the obs dataset
-                provenance_record = ProvenanceRecord(region=region, caption=geo_map.caption)
+            # Create provenance record for the figure
+            provenance_record = ProvenanceRecord(region=region, caption=geo_map.caption)
 
-                fig_name = variable + '_' + region + '_geographical_map_' + obs_dataset + '.png'
-                # Save figure to output dir and add it to provenance record
-                save_object(fig, fig_name, cfg, provenance_record.record)
+            fig_name = variable + '_' + region + '_geographical_map.png'
+            fig.tight_layout()
+            # Save figure to output dir and add it to provenance record
+            save_object(fig, fig_name, cfg, provenance_record.record)
 
         # TODO: replace obs looping with targeted obs plotting
         # for dataset in cfg['obs_datasets']:

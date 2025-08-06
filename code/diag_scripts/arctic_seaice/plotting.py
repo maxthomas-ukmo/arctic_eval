@@ -159,8 +159,8 @@ class GeoMap(Loader):
         '''
 
         cm = ax.pcolormesh(self.lon2d, self.lat2d, self.data[subset].data, transform=ccrs.PlateCarree(), cmap='viridis')
-        ax.set_title(self.variable + ' ' + self.dataset + ' ' + subset)
-        plt.colorbar(cm, ax=ax, orientation='horizontal', pad=0.05, label=self.variable + ' / ' + str(self.data[subset].units))
+        ax.set_title(self.dataset + ' ' + subset)
+        plt.colorbar(cm, ax=ax, orientation='vertical', pad=0.05, label=self.variable + ' / ' + str(self.data[subset].units))
         
 class Timeseries(Loader):
     ''' Load timeseries data from a dataset and variable and provide function to plot it.
