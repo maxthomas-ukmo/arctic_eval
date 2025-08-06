@@ -198,6 +198,11 @@ class Timeseries(Loader):
             self.sum_over_area()
             self.update_units(10**-14) # units after integrating are 10**-2 m2 in the input data. Multiply these by 10**-14 to get Mkm2
             self.yvar_description = 'sum of sea ice area [Mkm^2]'
+        elif self.variable == 'sithick':
+            self.multiply_by_area()
+            self.sum_over_area()
+            #self.update_units(10**-14)
+            self.yvar_description = 'sum of sea ice volume [m^3]'
 
         # Make caption for the figure
         self.caption = utils.make_figure_caption(self.plot_description, self.yvar_description, self.region, self.timerange)
@@ -208,19 +213,6 @@ class Timeseries(Loader):
 
         # Make time axis
         self.make_timeseries_xaxis()
-
-        
-
-
-    # def _make_timeseries_xaxis(self):
-    #     ''' Make the time variable for plotting.'''
-    #     # if self.dataset == 'HadISST': # HadISST time variable will plot fine
-    #     #     self.plot_time = self.data['main'].coord('time').points
-    #     # elif 'HadGEM' in self.dataset: # HadGEM time variable needs converting
-    #     #     #self.plot_time = utils.convert_cftime_to_datetime(self.data['main'].coords('time').points)
-    #     cftimes = self.data['main'].coord('time').units.num2date(self.data['main'].coord('time').points)
-    #     #self.plot_time = [datetime.datetime(d.year, d.month, d.day) for d in cftimes]
-    #     self.plot_time = cftimes
 
     def plot(self, ax, line_parameters=None, add_labels=True):
         ''' Plot the timeseries data.

@@ -413,20 +413,35 @@ def plot_timeseries(cfg):
                 except:
                     logger.warning('No data found for %s %s' % (variable, dataset))
 
-            # Loop over observational datasets
-            if cfg['obs_datasets']:
-                for dataset in cfg['obs_datasets']:
-                    # Get colour for dataset
-                    colour = formatting['dataset'][dataset]['colour']
-                    try:
-                        # Create timeseries object for observational dataset and variable
-                        timeseries = Timeseries(input_data, dataset, variable, aliases=['OBS'], region=region)
-                        # Plot timeseries to axes for that variable                 
-                        timeseries.plot(ax, line_parameters={'colour': colour})
-                        # Add ancestors to provenance record
-                        provenance_record.add_ancestors(timeseries.provenance_list)
-                    except:
-                        logger.warning('No data found for %s %s' % (variable, dataset))
+            if variable in cfg['variables_to_plot_obs']:
+                # If the variable has been specified to plot an observational dataset, we plot that here
+                obs_dataset = cfg['obs_datasets'][variable]
+                # Get colour for dataset
+                colour = formatting['dataset'][obs_dataset]['colour']
+                # Try alias = 'OBS' first, if that fails try OBS_<dataset>
+                try:
+                    timeseries = Timeseries(input_data, obs_dataset, variable, aliases=['OBS'], region=region)
+                except:
+                    timeseries = Timeseries(input_data, obs_dataset, variable, aliases=['OBS_' + obs_dataset], region=region)
+                # Plot timeseries to axes for that variable                 
+                timeseries.plot(ax, line_parameters={'colour': colour})
+                # Add ancestors to provenance record
+                provenance_record.add_ancestors(timeseries.provenance_list)
+
+            # # Loop over observational datasets
+            # if cfg['obs_datasets']:
+            #     for dataset in cfg['obs_datasets']:
+            #         # Get colour for dataset
+            #         colour = formatting['dataset'][dataset]['colour']
+            #         try:
+            #             # Create timeseries object for observational dataset and variable
+            #             timeseries = Timeseries(input_data, dataset, variable, aliases=['OBS'], region=region)
+            #             # Plot timeseries to axes for that variable                 
+            #             timeseries.plot(ax, line_parameters={'colour': colour})
+            #             # Add ancestors to provenance record
+            #             provenance_record.add_ancestors(timeseries.provenance_list)
+            #         except:
+            #             logger.warning('No data found for %s %s' % (variable, dataset))
             
             provenance_record.record['caption'] = timeseries.caption
             # Save figure to output dir and add it to provenance record
