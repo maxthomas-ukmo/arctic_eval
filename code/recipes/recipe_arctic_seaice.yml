@@ -101,35 +101,45 @@ preprocessors:
       
     
 diagnostics:
-  # seasonal_cycle:
-  #   description: Seasonal cycle of integrated sea-ice area
-  #   variables:
-  #     siconc:
-  #       mip: SImon
-  #       exp: historical
-  #       ensemble: r*i1p1f3
-  #       grid: gn
-  #       start_year: 1979
-  #       end_year: 1982
-  #       #preprocessor: whole_arctic_sum # this does the summing for the region passed to the preprocessor
-  #       preprocessor: arctic_gs_monthmean # this excludes the sum
-  #       #convert_units: 1e6 km2
-  #       additional_datasets:
-  #         -  {dataset: HadISST, project: OBS, mip: OImon, tier: 2, type: reanaly, version: 1, ensemble: '', grid: ''}
-  #     areacello:
-  #       mip: Ofx
-  #       grid: gn
-  #       exp: piControl
-  #       ensemble: r1i1p1f1
-  #       preprocessor: extract_whole_arctic
-  #   scripts:
-  #     seasonal_cycle:
-  #       script: ~/arctic_eval/code/diag_scripts/arctic_eval.py
-  #       dummy_plot: False
-  #       variables_to_plot: [siconc] #, sivol]
-  #       model_datasets: [HadGEM3-GC31-LL] #, HadGEM3-GC31-MM]
-  #       obs_datasets: [HadISST]
-  #       regions: ['Arctic', 'EB', 'AB']
+  seasonal_cycle:
+    description: Seasonal cycle of integrated sea-ice area
+    variables:
+      siconc: &seasonalcycle_var
+        mip: SImon
+        exp: historical
+        ensemble: r*i1p1f3
+        grid: gn
+        start_year: 1979
+        end_year: 1982
+        #preprocessor: whole_arctic_sum # this does the summing for the region passed to the preprocessor
+        preprocessor: arctic_gs_monthmean # this excludes the sum
+        #convert_units: 1e6 km2
+        additional_datasets:
+          -  {dataset: HadISST, project: OBS, mip: OImon, tier: 2, type: reanaly, version: 1, ensemble: '', grid: '', alias: OBS_HadISST}
+      areacello:
+        mip: Ofx
+        grid: gn
+        exp: piControl
+        ensemble: r1i1p1f1
+        preprocessor: extract_whole_arctic
+        additional_datasets:
+          - {dataset: PIOMAS, project: OBS, mip: fx, tier: 2, type: reanaly, version: 2.1, ensemble: '', grid: '', alias: OBS_PIOMAS}
+      sithick:
+        <<: *seasonalcycle_var
+        additional_datasets:
+          - {dataset: PIOMAS, project: OBS, mip: day, tier: 2, type: reanaly, version: 2.1, ensemble: '', grid: '', alias: OBS_PIOMAS}
+    scripts:
+      seasonal_cycle:
+        script: ~/arctic_eval/code/diag_scripts/arctic_eval.py
+        dummy_plot: False
+        variables_to_plot: [siconc, sithick]
+        model_datasets: [HadGEM3-GC31-LL] #, HadGEM3-GC31-MM]
+        obs_datasets: [HadISST]
+        regions: ['Arctic', 'EB', 'AB']
+        obs_datasets: 
+          siconc: HadISST
+          sithick: PIOMAS
+        variables_to_plot_obs: [siconc, sithick]
 
   # maps:
   #   description: Maps of March and September sea-ice concentration
@@ -164,42 +174,42 @@ diagnostics:
   #       variables_to_plot_obs: [siconc, sithick]
   #       months: [3, 9]        
 
-  timeseries:
-    description: Time series of integrated variables
-    variables:
-      siconc: &timeseries_var
-        mip: SImon
-        exp: historical
-        ensemble: r*i1p1f3
-        grid: gn
-        start_year: 1979
-        end_year: 2000
-        preprocessor: timeseries_gs 
-        additional_datasets:
-          -  {dataset: HadISST, project: OBS, mip: OImon, tier: 2, type: reanaly, version: 1, ensemble: '', grid: ''}
-      areacello:
-        mip: Ofx
-        grid: gn
-        exp: piControl
-        ensemble: r1i1p1f1
-        preprocessor: extract_whole_arctic
-        additional_datasets:
-          - {dataset: PIOMAS, project: OBS, mip: fx, tier: 2, type: reanaly, version: 2.1, ensemble: '', grid: '', alias: OBS_PIOMAS}
-      sithick: 
-        <<: *timeseries_var
-        additional_datasets:
-          - {dataset: PIOMAS, project: OBS, mip: day, tier: 2, type: reanaly, version: 2.1, ensemble: '', grid: '', alias: OBS_PIOMAS}
-    scripts:
-      timeseries:
-        script: ~/arctic_eval/code/diag_scripts/arctic_eval.py
-        dummy_plot: False
-        variables_to_plot: [siconc, sithick]
-        model_datasets: [HadGEM3-GC31-LL] #, HadGEM3-GC31-MM]
-        obs_datasets: 
-          siconc: HadISST
-          sithick: PIOMAS
-        variables_to_plot_obs: [siconc, sithick]
-        regions: ['Arctic', 'EB', 'AB']
+  # timeseries:
+  #   description: Time series of integrated variables
+  #   variables:
+  #     siconc: &timeseries_var
+  #       mip: SImon
+  #       exp: historical
+  #       ensemble: r*i1p1f3
+  #       grid: gn
+  #       start_year: 1979
+  #       end_year: 2000
+  #       preprocessor: timeseries_gs 
+  #       additional_datasets:
+  #         -  {dataset: HadISST, project: OBS, mip: OImon, tier: 2, type: reanaly, version: 1, ensemble: '', grid: ''}
+  #     areacello:
+  #       mip: Ofx
+  #       grid: gn
+  #       exp: piControl
+  #       ensemble: r1i1p1f1
+  #       preprocessor: extract_whole_arctic
+  #       additional_datasets:
+  #         - {dataset: PIOMAS, project: OBS, mip: fx, tier: 2, type: reanaly, version: 2.1, ensemble: '', grid: '', alias: OBS_PIOMAS}
+  #     sithick: 
+  #       <<: *timeseries_var
+  #       additional_datasets:
+  #         - {dataset: PIOMAS, project: OBS, mip: day, tier: 2, type: reanaly, version: 2.1, ensemble: '', grid: '', alias: OBS_PIOMAS}
+  #   scripts:
+  #     timeseries:
+  #       script: ~/arctic_eval/code/diag_scripts/arctic_eval.py
+  #       dummy_plot: False
+  #       variables_to_plot: [siconc, sithick]
+  #       model_datasets: [HadGEM3-GC31-LL] #, HadGEM3-GC31-MM]
+  #       obs_datasets: 
+  #         siconc: HadISST
+  #         sithick: PIOMAS
+  #       variables_to_plot_obs: [siconc, sithick]
+  #       regions: ['Arctic', 'EB', 'AB']
           
   # region_plot:
   #   description: Regions used for subsetting
