@@ -148,21 +148,19 @@ class Loader():
     
     def _get_area_data(self):
         ''' Get areacello data, or not.'''
+        # Check if there's an area file as assign the file path to area_file
+        area_file = None
         for key in self.input_data:
             data = self.input_data[key]
             if data['dataset'] == self.dataset and data['short_name'] == 'areacello':
                 area_file = key
                 print('FOUND AREA for ' + key)
+
+        # If there's an area file, load it, otherwise return None
         if area_file is None:
             print('No areacello data found for %s' % self.dataset)
-            for key in self.input_data:
-                print('----' + key)
-                data = self.input_data[key]
-                print(data['short_name'] + ' ' + data['dataset'])
-                print('-----')
             return None
         else:
-            # return xr.open_dataset(area_file)['areacello']
             return iris.load_cube(area_file)
         
     def _load_data(self):

@@ -101,40 +101,40 @@ preprocessors:
       
     
 diagnostics:
-  seasonal_cycle:
-    description: Seasonal cycle of integrated sea-ice area
-    variables:
-      siconc:
-        mip: SImon
-        exp: historical
-        ensemble: r*i1p1f3
-        grid: gn
-        start_year: 1979
-        end_year: 1982
-        #preprocessor: whole_arctic_sum # this does the summing for the region passed to the preprocessor
-        preprocessor: arctic_gs_monthmean # this excludes the sum
-        #convert_units: 1e6 km2
-        additional_datasets:
-          -  {dataset: HadISST, project: OBS, mip: OImon, tier: 2, type: reanaly, version: 1, ensemble: '', grid: ''}
-      areacello:
-        mip: Ofx
-        grid: gn
-        exp: piControl
-        ensemble: r1i1p1f1
-        preprocessor: extract_whole_arctic
-    scripts:
-      seasonal_cycle:
-        script: ~/arctic_eval/code/diag_scripts/arctic_eval.py
-        dummy_plot: False
-        variables_to_plot: [siconc] #, sivol]
-        model_datasets: [HadGEM3-GC31-LL] #, HadGEM3-GC31-MM]
-        obs_datasets: [HadISST]
-        regions: ['Arctic', 'EB', 'AB']
+  # seasonal_cycle:
+  #   description: Seasonal cycle of integrated sea-ice area
+  #   variables:
+  #     siconc:
+  #       mip: SImon
+  #       exp: historical
+  #       ensemble: r*i1p1f3
+  #       grid: gn
+  #       start_year: 1979
+  #       end_year: 1982
+  #       #preprocessor: whole_arctic_sum # this does the summing for the region passed to the preprocessor
+  #       preprocessor: arctic_gs_monthmean # this excludes the sum
+  #       #convert_units: 1e6 km2
+  #       additional_datasets:
+  #         -  {dataset: HadISST, project: OBS, mip: OImon, tier: 2, type: reanaly, version: 1, ensemble: '', grid: ''}
+  #     areacello:
+  #       mip: Ofx
+  #       grid: gn
+  #       exp: piControl
+  #       ensemble: r1i1p1f1
+  #       preprocessor: extract_whole_arctic
+  #   scripts:
+  #     seasonal_cycle:
+  #       script: ~/arctic_eval/code/diag_scripts/arctic_eval.py
+  #       dummy_plot: False
+  #       variables_to_plot: [siconc] #, sivol]
+  #       model_datasets: [HadGEM3-GC31-LL] #, HadGEM3-GC31-MM]
+  #       obs_datasets: [HadISST]
+  #       regions: ['Arctic', 'EB', 'AB']
 
   maps:
     description: Maps of March and September sea-ice concentration
     variables:
-      siconc:
+      siconc: &maps_var
         mip: SImon
         exp: historical
         ensemble: r*i1p1f3
@@ -146,63 +146,71 @@ diagnostics:
         #convert_units: 1e6 km2
         additional_datasets:
           -  {dataset: HadISST, project: OBS, mip: OImon, tier: 2, type: reanaly, version: 1, ensemble: '', grid: ''}
+      sithick: 
+        <<: *maps_var
+        additional_datasets:
+          - {dataset: PIOMAS, project: OBS, mip: day, tier: 2, type: reanaly, version: 2.1, ensemble: '', grid: ''}
     scripts:
       geo_map_march_sept:
         script: ~/arctic_eval/code/diag_scripts/arctic_eval.py
         dummy_plot: False
-        variables_to_plot: [siconc]
+        variables_to_plot: [siconc, sithick]
         regions: ['Arctic']
         model_datasets: [HadGEM3-GC31-LL] #, HadGEM3-GC31-MM]
-        obs_datasets: [HadISST]
+        # TODO: need some way to specify an obs for a variable, otherwise, eg, sivol looks for HaDISST too
+        obs_datasets: 
+          siconc: HadISST
+          sithick: PIOMAS
+        variables_to_plot_obs: [siconc] #, sithick]
         months: [3, 9]        
 
-  timeseries:
-    description: Time series of integrated sea-ice area
-    variables:
-      siconc: 
-        mip: SImon
-        exp: historical
-        ensemble: r*i1p1f3
-        grid: gn
-        start_year: 1979
-        end_year: 2000
-        preprocessor: timeseries_gs 
-        additional_datasets:
-          -  {dataset: HadISST, project: OBS, mip: OImon, tier: 2, type: reanaly, version: 1, ensemble: '', grid: ''}
-      areacello:
-          mip: Ofx
-          grid: gn
-          exp: piControl
-          ensemble: r1i1p1f1
-          preprocessor: extract_whole_arctic
-    scripts:
-      timeseries:
-        script: ~/arctic_eval/code/diag_scripts/arctic_eval.py
-        dummy_plot: False
-        variables_to_plot: [siconc]
-        model_datasets: [HadGEM3-GC31-LL] #, HadGEM3-GC31-MM]
-        obs_datasets: [HadISST]
-        regions: ['Arctic', 'EB', 'AB']
+  # timeseries:
+  #   description: Time series of integrated sea-ice area
+  #   variables:
+  #     siconc: 
+  #       mip: SImon
+  #       exp: historical
+  #       ensemble: r*i1p1f3
+  #       grid: gn
+  #       start_year: 1979
+  #       end_year: 2000
+  #       preprocessor: timeseries_gs 
+  #       additional_datasets:
+  #         -  {dataset: HadISST, project: OBS, mip: OImon, tier: 2, type: reanaly, version: 1, ensemble: '', grid: ''}
+  #     areacello:
+  #         mip: Ofx
+  #         grid: gn
+  #         exp: piControl
+  #         ensemble: r1i1p1f1
+  #         preprocessor: extract_whole_arctic
+  #   scripts:
+  #     timeseries:
+  #       script: ~/arctic_eval/code/diag_scripts/arctic_eval.py
+  #       dummy_plot: False
+  #       variables_to_plot: [siconc]
+  #       model_datasets: [HadGEM3-GC31-LL] #, HadGEM3-GC31-MM]
+  #       obs_datasets: [HadISST]
+  #       regions: ['Arctic', 'EB', 'AB']
           
-  region_plot:
-    description: Regions used for subsetting
-    variables:
-      siconc: 
-        mip: SImon
-        exp: historical
-        ensemble: r*i1p1f3
-        grid: gn
-        start_year: 1979
-        end_year: 1980
-        preprocessor: 2D_map # this does the summing for the region passed to the preprocessor
-        additional_datasets:
-          -  {dataset: HadISST, project: OBS, mip: OImon, tier: 2, type: reanaly, version: 1, ensemble: '', grid: ''}
-    scripts:
-      regions:
-        script: ~/arctic_eval/code/diag_scripts/arctic_eval.py
-        dummy_plot: False
-        variables_to_plot: [siconc]
-        regions: ['EB', 'AB', 'Barents_sea']
-        region_centers: [[85,0], [85, 180], [75, 40]]
-        model_datasets: [HadGEM3-GC31-LL] #, HadGEM3-GC31-MM]
-        obs_datasets: [HadISST]
+  # region_plot:
+  #   description: Regions used for subsetting
+  #   variables:
+  #     siconc: 
+  #       mip: SImon
+  #       exp: historical
+  #       ensemble: r*i1p1f3
+  #       grid: gn
+  #       start_year: 1979
+  #       end_year: 1980
+  #       preprocessor: 2D_map # this does the summing for the region passed to the preprocessor
+  #       additional_datasets:
+  #         -  {dataset: HadISST, project: OBS, mip: OImon, tier: 2, type: reanaly, version: 1, ensemble: '', grid: ''}
+  #   scripts:
+  #     regions:
+  #       script: ~/arctic_eval/code/diag_scripts/arctic_eval.py
+  #       dummy_plot: False
+  #       variables_to_plot: [siconc]
+  #       regions: ['EB', 'AB', 'Barents_sea']
+  #       region_centers: [[85,0], [85, 180], [75, 40]]
+  #       model_datasets: [HadGEM3-GC31-LL] #, HadGEM3-GC31-MM]
+  #       obs_datasets: [HadISST]
