@@ -7,13 +7,16 @@ This repository contains ESMValTool recipes for evaluating climate models with a
 There are three evaulation tools for the Arctic:
 - *sea ice*: with a focus on sea-ice data
 - *transports*: which uses the StraitFlux package to calculate volume, heat, and salt fluxes through Arctic gateways
-- *ocean*: which just updates an existing recipe to take HadGEM3 data
+- *ocean*: which just updates an existing recipe with centrally stored diagnostic scripts to take HadGEM3 data
 
 ## Getting started
 First get the public repository.
 ```
+cd
 git clone git@github.com:maxthomas-ukmo/arctic_eval.git
 ```
+Installing into ```~``` should mean the recipes work out of the box. 
+
 Then create the required environment.
 ```
 cd arctic_eval
@@ -22,46 +25,51 @@ conda create --name arctic_eval --file environment/arctic_eval.lock
 The *arctic_eval* environment duplicates the Met Office's internal scitools/community/esmvaltool-2.11.0 and adds dependencies for StraitFlux. Activate the environment using 
 ```conda activate arctic_eval```, or let the run scripts (below) do that for you.
 
-The next step is to edit the ```config/config-user.yml``` file and make paths appropriate for the given user.
+The next step is to edit the ```config/config-user.yml``` file and make paths appropriate for the given user. Out of the box, the paths should just work from the MO providing ```arctic_eval``` is in ```~```.
 
-There is a run script for each of the recipes. Once the environment is created, a user can get started by running in a terminal
+The easiest way to run a recipe is by running
+```./run.sh```. Alternatively, a user can get started by running in a terminal. I reccomend starting with
 ```
 cd code
-./run_arctic_seaice.sh
+./run.sh recipe_arctic_seaice
 ```
-or via slurm
-```
-sbatch run_arctic_seaice.sh
-```
-which is likely required for large jobs. Either of these load the environment and run ESMValTool using ```recipe_arctic_seaice.yaml```. If the recipe runs sucessfully, terminal or log output (```seaice_eval.log``` by default) should contain a path to the recipe output, like:
+which will run ```recipes/recipe_arctic_seaice.yml``` via an ```srun``` command. Memory can be configured at the command line but there's no need for initial testing, as it's generous.
+
+If the recipe runs sucessfully, terminal or log output (```code/recipe_arctic_seaice.log``` by default) should contain a path to the recipe output, like:
 ```
 INFO    Wrote recipe output to:
 file://<path/to/recipe output>/index.html
 ```
 Inspect this with ```firefox /<path/to/recipe output>/index.html```.
 
+Recipe output can be archived to ~/public_html/ using
+```
+./archive_recipe.sh recipe_arctic_<seaice/transport/ocean>_<YYYYMMDD_HHMMSS> <name for archive, like recipe_arctic_seaice-initial_test>
+```
+
 ---
 ## Overview
 The directory structure is:
 ```
+arctic_eval
 ├── code
 │   ├── archive_recipe.sh
 │   ├── diag_scripts
 │   │   ├── arctic_eval.py
 │   │   ├── arctic_seaice
-│   │   │   ├── arctic_seaice.py
-│   │   │   ├── __init__.py
-│   │   │   ├── plotting.py
-│   │   │   └── utils.py
-│   │   └── __init__.py
+│   │   ├── __init__.py
+│   │   └── StraitFlux
 │   ├── plot_formatting.yml
 │   ├── readme
-│   ├── recipe_arctic_ocean.yml
-│   ├── recipe_arctic_seaice.yml
-│   ├── recipe_arctic_transport.yml
-│   ├── run_arctic_ocean.sh
-│   ├── run_arctic_seaice.sh
-│   └── run_arctic_transport.sh
+│   ├── recipe_arctic_ocean.log
+│   ├── recipe_arctic_seaice.log
+│   ├── recipe_arctic_transport.log
+│   ├── recipes
+│   │   ├── recipe_arctic_ocean.yml
+│   │   ├── recipe_arctic_seaice.yml
+│   │   └── recipe_arctic_transport.yml
+│   ├── run_esmvaltool.sh
+│   └── run.sh
 ├── config
 │   └── config-user.yml
 ├── environment
@@ -83,23 +91,36 @@ code/diag_scripts/utils.py
 code/diag_scripts/plotting.py
 ```
 
-The run script is just loadsd the environment and runs the recipe via Spice. The recipe calls ```arctic_eval.py``` several times, and passes a configuration file telling it what to do. 
+The run script is just loaded the environment and runs the recipe via Spice. The recipe calls ```arctic_eval.py``` several times, and passes a configuration file telling it what to do. 
 
 Each analysis type exists as a class in ```plotting.py```, and typically one instance of a class is made for each dataset in each panel.
 
 Each class in ```plotting.py``` inherits from a the ```Loader``` class in ```utils.py```. The loader finds the netcdfs that ESMValTool has created, loads them to ```iris``` cubes, and does some processing requested by the recipe. 
 
 For example, a seasonal cycle plot of integrated sea-ice area for HadGEM3-GC3.1-LL and HadISST reanalysis, for the Amerasian and Eurasian basins, would go through these steps:
-- ```arctic_eval.py``` would loop over the regions, producing a figure for each. It would then loop over the datasets (min, mean, and max as one dataset for the model ensemble, plus one dataset for the reanalysis).
+- ```arctic_eval.py``` would loop over the regions, producing a figure object for each. It would then loop over the datasets (min, mean, and max as one dataset for the model ensemble, plus one dataset for the reanalysis).
 - An instance of ```SeasonalCycle``` would be called from ```plotting.py``` for each dataset and region.
 - That instance would initalise from ```Loader```, which would find, load, and organise the relavent data. For siconc, this would include areacello as an extra dataset. It would also make and apply a region mask.
 - The ```SeasonalCycle``` instance would so all the variable specific processing, like multiplying through by area and summing. 
 - ```arctic_eval.py``` would use the pre-defined plot function in the ```SeasonalCycle``` instance to add data to the figure, then do the provenance logging and figure saving.
 
+# Transports evaluation
+The python is identical for ```recipe_arctic_transport.yml``` (though it may be best to separate transport and sea ice evaluation in future).
+
+The recipe gets *vo*, *uo*, *thetao*, and *so* from a given dataset. Calculation of transports from these is done using the StraitFlux package:
+https://github.com/susannawinkelbauer/StraitFlux, as documented here:
+https://doi.org/10.5194/gmd-17-4603-2024. 
+
+The volume, heat, and salt transport are calculated as timeseries accross straits defined by name (e.g. 'Fram') in the recipe.
+
+# Ocean evaluation
+```recipe_arctic_ocean.yml`` is previously published and its python is stored in the central ESMValTool space at the MO.
+
+
 ## Running
 The best way to run the code is
 ```
-./run_recipe_<seaice, transports, ocean>.sh
+./run.sh recipe_arctic_<seaice, transports, ocean>
 ```
 Alternatively, the environment can be loaded and a recipe run using
 ```
