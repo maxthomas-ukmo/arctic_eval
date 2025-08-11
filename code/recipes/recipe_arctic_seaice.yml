@@ -26,26 +26,17 @@ datasets:
 
 preprocessors:
 
+# Extract the whole Arctic region
+# This preprocessor is recycled using the anchor
   extract_whole_arctic: &extract_whole_arctic_preprocessor
     extract_region: 
       start_longitude: 0
       end_longitude: 360
       start_latitude: 50
       end_latitude: 90
-  
-  whole_arctic_sum:
-    <<: *extract_whole_arctic_preprocessor
-    climate_statistics: 
-      operator: mean
-      period: month
-    area_statistics:
-      operator: sum
-    multi_model_statistics:
-      span: full
-      statistics: [mean, min, max]
-      groupby: [dataset]
 
-  # monthly means for each gridcell in arctic
+ # Mean of each month for the whole Arctic (i.e. a seasonal cycle)
+ # Data are returned on the native grid (no area processing) and min/mean/max are calculated for individual model ensembles
   arctic_gs_monthmean:
     # extract Arctic
     <<: *extract_whole_arctic_preprocessor 
@@ -57,7 +48,8 @@ preprocessors:
       statistics: [mean, min, max]
       groupby: [dataset] # this is needed to get an ensemble of a single model
 
-# TODO: either use extract_whole_arctic_preprocessor here or replace the anchors above, for consistency    
+# TODO: Think about using the extract preprocessor anchor here
+# This preprocessor is used to extract the 2D (lat/lon) maps
   2D_map:
     extract_region:
       start_longitude: 0
@@ -69,23 +61,10 @@ preprocessors:
       statistics: [mean]
       groupby: [dataset]
 
-  timeseries_sum:
-    extract_region:
-      start_longitude: 0
-      end_longitude: 360
-      start_latitude: 65
-      end_latitude: 90
-    area_statistics:
-      operator: sum
-    multi_model_statistics:
-      span: full
-      statistics: [mean]
-      groupby: [dataset]
-
+# This preprocessor is used to calculate the time series
+# Data are returned on the native grid (no area processing) and mean is calculated for individual model ensembles
   timeseries_gs:
     <<: *extract_whole_arctic_preprocessor
-    # area_statistics:
-    #   operator: sum
     multi_model_statistics:
       span: full
       statistics: [mean]
@@ -214,6 +193,7 @@ diagnostics:
           sithick: PIOMAS
         variables_to_plot_obs: [siconc, sithick]
         regions: ['Arctic', 'EB', 'AB']
+        running_mean_window: 12
 #======================================================================
 
 #======================================================================
@@ -247,8 +227,6 @@ diagnostics:
         masks_to_derive: [HadGEM3-GC31-LL, HadGEM3-GC31-MM, HadISST, PIOMAS]
         regions: ['EB', 'AB', 'Barents_sea']
         region_centers: [[85,0], [85, 180], [75, 40]]
-        #model_datasets: [HadGEM3-GC31-LL, HadGEM3-GC31-MM]
-        #obs_datasets: [HadISST]
         derive_mask_from:
           HadGEM3-GC31-LL: siconc
           HadGEM3-GC31-MM: siconc
