@@ -62,7 +62,7 @@ diagnostics:
         preprocessor: arctic_ensemble_mean
         mip: Omon
         start_year: 1979
-        end_year: 1981
+        end_year: 2000
         exp: historical 
         ensemble: r1i1p1f3
       uo: *variables
@@ -80,7 +80,7 @@ diagnostics:
         plot_type: [crosssection, timeseries]
         dummy_plot: False
         time_start: 1979-01 # These are needed here to pass to the strait flux functions and must match the preprocessing
-        time_end: 1981-12
+        time_end: 2000-12
         model_datasets: [HadGEM3-GC31-LL, HadGEM3-GC31-MM]
         # strait: [Fram, Barents, Bering, Hudson, Hudson_NW, Färöer, IF, FS, OSNAP, GSR, NIIC]
         strait: [Fram, Barents, Bering] # Not working with -LL: Hudson, Hudson_NW, IF, Färöer, FS
