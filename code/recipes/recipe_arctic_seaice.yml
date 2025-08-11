@@ -166,7 +166,7 @@ diagnostics:
         ensemble: r*i1p1f3
         grid: gn
         start_year: 1979
-        end_year: 2001
+        end_year: 2014
         preprocessor: timeseries_gs 
         additional_datasets:
           -  {dataset: HadISST, project: OBS, mip: OImon, tier: 2, type: reanaly, version: 1, ensemble: '', grid: ''}
