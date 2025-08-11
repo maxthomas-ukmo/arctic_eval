@@ -423,7 +423,7 @@ def plot_timeseries(cfg):
                     # Create timeseries object for dataset and variable
                     timeseries = Timeseries(input_data, dataset, variable, aliases=[dataset+'Mean'], region=region)
                     # Plot timeseries to axes for that variable
-                    timeseries.plot(ax, line_parameters={'colour': colour})
+                    timeseries.plot(ax, line_parameters={'colour': colour}, running_mean_window=cfg['running_mean_window'])
                     # Add ancestors to provenance record
                     provenance_record.add_ancestors(timeseries.provenance_list)
                 except:
@@ -440,7 +440,7 @@ def plot_timeseries(cfg):
                 except:
                     timeseries = Timeseries(input_data, obs_dataset, variable, aliases=['OBS_' + obs_dataset], region=region)
                 # Plot timeseries to axes for that variable                 
-                timeseries.plot(ax, line_parameters={'colour': colour})
+                timeseries.plot(ax, line_parameters={'colour': colour}, running_mean_window=cfg['running_mean_window'])
                 # Add ancestors to provenance record
                 provenance_record.add_ancestors(timeseries.provenance_list)
 

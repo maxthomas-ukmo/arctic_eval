@@ -521,7 +521,7 @@ def get_timerange_from_input_data(input_data, key_index=0):
     return timerange
 
 def make_figure_caption(plot_type, yvar_description, region, timerange, model_datasets=None, obs_datasets=None):
-    caption = f"{plot_type} of {yvar_description} in {region} region for {timerange} time mean."
+    caption = f"{plot_type} of {yvar_description} in {region} region for {timerange}."
     if model_datasets:
         caption += f"\n - Models: {', '.join(model_datasets)}"
     if obs_datasets:

@@ -67,8 +67,6 @@ class SeasonalCycle(Loader):
         line_parameters (dict) -- dictionary of line parameters (default None)
         add_labels (bool) -- add labels to the plot (default True)
         '''
-        print('Plotting: SeasonalCycle: plot: ')
-        print(self.plot_type)
 
         xvar = self.data['main'].coord('month_number').points
 
@@ -219,7 +217,7 @@ class Timeseries(Loader):
         # Make time axis
         self.make_timeseries_xaxis()
 
-    def plot(self, ax, line_parameters=None, add_labels=True):
+    def plot(self, ax, line_parameters=None, add_labels=True, running_mean_window=None):
         ''' Plot the timeseries data.
         
         Keyword arguments:
@@ -227,8 +225,10 @@ class Timeseries(Loader):
         line_parameters (dict) -- dictionary of line parameters (default None)
         add_labels (bool) -- add labels to the plot (default True)
         '''
-        print('Plotting: Timeseries: plot: ')
-        print(self.plot_type)
+        if running_mean_window is not None:
+            alpha_main = 0.5
+        else:
+            alpha_main = 1.0
 
         if line_parameters is None:
             colour = 'k'
@@ -240,7 +240,8 @@ class Timeseries(Loader):
             da = xr.DataArray(self.data['main'].data, 
                               coords=[self.plot_time],
                               dims=['time'])
-            da.plot.line(ax=ax, label=self.input_files['main']['alias'], color=colour)
+            da_monthly = da.resample(time='1M').mean()  # Resample to monthly means. This step is needed because piomas is daily frequency and ends up with a bugged rolling average
+            da_monthly.plot.line(ax=ax, label=self.input_files['main']['alias'], color=colour, alpha=alpha_main)
         elif self.plot_type == 'range':
             # TODO: Implement fill between for min max aliases
             print('Range plotting not implemented yet for timeseries')
@@ -250,6 +251,11 @@ class Timeseries(Loader):
             print('No data found for %s %s' % (self.dataset, self.variable))
         else:
             print('Use case for more than three files in timeseries not defined')
+
+        if running_mean_window is not None:
+            # Calculate running mean
+            running_mean = da_monthly.rolling(time=running_mean_window, center=True).mean()
+            running_mean.plot.line(ax=ax, color=colour) #, label='Running mean (%d months)' % running_mean_window)
 
         plt.legend()
         
