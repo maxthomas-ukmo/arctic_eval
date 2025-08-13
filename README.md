@@ -6,7 +6,7 @@ This repository contains ESMValTool recipes for evaluating climate models with a
 
 There are three evaulation tools for the Arctic:
 - *sea ice*: with a focus on sea-ice data
-- *transports*: which uses the StraitFlux package to calculate volume, heat, and salt fluxes through Arctic gateways
+- *transport*: which uses the StraitFlux package to calculate volume, heat, and salt fluxes through Arctic gateways
 - *ocean*: which just updates an existing recipe with centrally stored diagnostic scripts to take HadGEM3 data
 
 ## Getting started
@@ -104,7 +104,7 @@ For example, a seasonal cycle plot of integrated sea-ice area for HadGEM3-GC3.1-
 - The ```SeasonalCycle``` instance would so all the variable specific processing, like multiplying through by area and summing. 
 - ```arctic_eval.py``` would use the pre-defined plot function in the ```SeasonalCycle``` instance to add data to the figure, then do the provenance logging and figure saving.
 
-# Transports evaluation
+# Transport evaluation
 The python is identical for ```recipe_arctic_transport.yml``` (though it may be best to separate transport and sea ice evaluation in future).
 
 The recipe gets *vo*, *uo*, *thetao*, and *so* from a given dataset. Calculation of transports from these is done using the StraitFlux package:
@@ -120,11 +120,11 @@ The volume, heat, and salt transport are calculated as timeseries accross strait
 ## Running
 The best way to run the code is
 ```
-./run.sh recipe_arctic_<seaice, transports, ocean>
+./run.sh recipe_arctic_<seaice, transport, ocean>
 ```
 Alternatively, the environment can be loaded and a recipe run using
 ```
-esmvaltool run recipe_arctic_<seaice, transports, ocean>.yml --config_file <path to config-user.yml>
+esmvaltool run recipe_arctic_<seaice, transport, ocean>.yml --config_file <path to config-user.yml>
 ```
 
 ## Modifying the code
@@ -137,5 +137,5 @@ To add a new region the ```get_region_indicies``` function in ```utils.py``` mus
 ## Things to do
 - Create, maintain, and load some central environment
 - Define logic to process variable within plotting based on some list of final outputs, rather than input variables. This would allow, e.g., sicon to be passed to SeasonalCycle, and define in the recipe if integrated area or extent was required.
-- There's no technical reason to confine this to the Arctic. Either adding Southern Ocean regions or having a ```recipe_southernocean_<seaice, transports, ocean>.yml``` would be easy.
+- There's no technical reason to confine this to the Arctic. Either adding Southern Ocean regions or having a ```recipe_southernocean_<seaice, transport, ocean>.yml``` would be easy.
 

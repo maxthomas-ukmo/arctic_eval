@@ -19,7 +19,7 @@ echo "Archiving recipe $recipe_name"
 ARCHIVE_DIR=~/public_html/esmvaltool/$recipe_name_for_webpage
 echo "ARCHIVE_DIR: " $ARCHIVE_DIR
 
-RAW_DIR=/data/users/max.thomas/esmvaltool/esmvaltool_output/$1
+RAW_DIR=$DATADIR/esmvaltool/esmvaltool_output/$1
 echo "RAW_DIR: " $RAW_DIR
 
 echo "Linking dir"
