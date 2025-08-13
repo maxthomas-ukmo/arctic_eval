@@ -89,8 +89,8 @@ class SeasonalCycle(Loader):
         if add_labels:
             ax.set_xlabel('Month')
             ax.set_ylabel(self.yvar_description)
-            ax.set_xticks(range(1,13))
-            ax.set_xticklabels(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])
+            # ax.set_xticks(range(1,13))
+            # ax.set_xticklabels(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])
 
 class GeoMap(Loader):
     ''' Load map data from a dataset and variable and provide function to plot it.

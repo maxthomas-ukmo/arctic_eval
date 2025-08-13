@@ -116,7 +116,6 @@ def plot_ocean_strait_flux_timeseries(cfg):
         fig.tight_layout()
         save_object(fig, strait + '_transports_timeseries.png', cfg, provenance_record.record)
 
-
 def plot_ocean_strait_flux_crosssection(cfg):
     print('SF crosssection')
     input_data= cfg['input_data']
@@ -230,24 +229,6 @@ def plot_seasonal_cycles(cfg):
                 seasonal_cycle.plot(ax, line_parameters={'colour': colour})
                 # Add ancestors to provenance record
                 provenance_record.add_ancestors(seasonal_cycle.provenance_list)
-
-
-            # # Loop over observational datasets
-            # if cfg['obs_datasets']:
-            #     for dataset in cfg['obs_datasets']:
-            #         # Get colour for dataset
-            #         colour = formatting['dataset'][dataset]['colour']
-            #         try:
-            #             # Create seasonal cycle object for observational dataset and variable
-            #             seasonal_cycle = SeasonalCycle(input_data, dataset, variable, aliases=['OBS'], region=region)
-            #             # Plot seasonal cycle to axes for that variable                 
-            #             seasonal_cycle.plot(ax, line_parameters={'colour': colour})
-            #             # Add ancestors to provenance record
-            #             provenance_record.add_ancestors(seasonal_cycle.provenance_list)
-            #         except:
-            #             logger.warning('No data found for %s %s' % (variable, dataset))
-            #             for key in input_data:
-                            # print(input_data[key])
             
             provenance_record.record['caption'] = seasonal_cycle.caption
             # Save figure to output dir and add it to provenance record
