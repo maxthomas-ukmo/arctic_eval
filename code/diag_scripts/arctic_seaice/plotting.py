@@ -42,14 +42,18 @@ class SeasonalCycle(Loader):
         self.timerange = utils.get_timerange_from_input_data(self.input_data)
    
         # Add variable specific attributes and perform variable specific procesing steps
-        # The data passed by the loader should be gridded, 2D, and have been preprocessed into monthly means for each gridcell
+        # The data passed by the loader should be gridded, 2D, and have been preprocessed into monthly means for each gridcell (so month_number x latitude x longitide)
         # ----- siconc
         if self.variable == 'siconc':
             self.multiply_by_area()
             self.sum_over_area()
             self.update_units(10**-14) # units after integrating are 10**-2 m2 in the input data. Multiply these by 10**-14 to get Mkm2
             self.yvar_description = 'sum of sea ice area [Mkm^2]'
-        elif self.variable == 'sithick':
+        # ----- sivol (note, for sivol the obs are piomas which take thickness. There is a separate entry for that)
+        elif (self.variable == 'sivol') or (self.variable == 'sithick'):
+            if (not self.dataset == 'PIOMAS') and (self.variable == 'sithick'):
+                print('Warning: sithick should only be used for PIOMAS dataset. Using it for %s' % self.dataset)
+                print('If a seasonal cycle of thickness (i.e. the mean thickness) is needed, new functionality needs to be added.')
             self.multiply_by_area()
             self.sum_over_area()
             self.update_units(10**-12) # units are m3, so we multiply by 10**-12 to get 1000.km3

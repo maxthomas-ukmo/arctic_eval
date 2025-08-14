@@ -220,11 +220,16 @@ def plot_seasonal_cycles(cfg):
                 obs_dataset = cfg['obs_datasets'][variable]
                 # Get colour for dataset
                 colour = formatting['dataset'][obs_dataset]['colour']
+                # If variable==sivol, we need to start working with thickness for piomas
+                if variable == 'sivol':
+                    obs_variable = 'sithick'
+                else:
+                    obs_variable = variable
                 # Try alias = 'OBS' first, if that fails try OBS_<dataset>
                 try:
-                    seasonal_cycle = SeasonalCycle(input_data, obs_dataset, variable, aliases=['OBS'], region=region)
+                    seasonal_cycle = SeasonalCycle(input_data, obs_dataset, obs_variable, aliases=['OBS'], region=region)
                 except:
-                    seasonal_cycle = SeasonalCycle(input_data, obs_dataset, variable, aliases=['OBS_' + obs_dataset], region=region)
+                    seasonal_cycle = SeasonalCycle(input_data, obs_dataset, obs_variable, aliases=['OBS_' + obs_dataset], region=region)
                 # Plot seasonal cycle to axes for that variable                 
                 seasonal_cycle.plot(ax, line_parameters={'colour': colour})
                 # Add ancestors to provenance record

@@ -81,7 +81,16 @@ diagnostics:
   seasonal_cycle:
     description: Seasonal cycles
     variables:
-      siconc: &seasonalcycle_var
+      sivol: &seasonalcycle_var
+        mip: SImon
+        exp: historical
+        ensemble: r*i1p1f3
+        grid: gn
+        start_year: 1979
+        end_year: 2001
+        preprocessor: arctic_gs_monthmean
+      siconc: 
+        <<: *seasonalcycle_var
         mip: SImon
         exp: historical
         ensemble: r*i1p1f3
@@ -107,14 +116,13 @@ diagnostics:
       seasonal_cycle:
         script: ~/arctic_eval/code/diag_scripts/arctic_eval.py
         dummy_plot: False
-        variables_to_plot: [siconc, sithick]
+        variables_to_plot: [siconc, sivol]
         model_datasets: [HadGEM3-GC31-LL, HadGEM3-GC31-MM]
-        obs_datasets: [HadISST]
         regions: ['Arctic', 'EB', 'AB']
         obs_datasets: 
           siconc: HadISST
-          sithick: PIOMAS
-        variables_to_plot_obs: [siconc, sithick]
+          sivol: PIOMAS
+        variables_to_plot_obs: [siconc, sivol]
 #=====================================================================
 
 #======================================================================
