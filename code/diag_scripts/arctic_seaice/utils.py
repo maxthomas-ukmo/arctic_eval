@@ -289,6 +289,25 @@ class Loader():
                 self.data['min'] = self.data['min'].collapsed(['latitude', 'longitude'], iris.analysis.SUM)
                 self.data['max'] = self.data['max'].collapsed(['latitude', 'longitude'], iris.analysis.SUM)
 
+    def cell_area_weighted_mean(self):
+        '''
+        Calculate the cell area weighted mean of the main variable.
+
+        If min and max exist, perform the same processing for those.
+
+        self.data are updated directly, resulting in units of the original variable.
+        '''
+        print('Calculating cell area weighted mean of %s.' % self.variable)
+
+        # Broadcast areacello if necessary to get weights of the right shape
+        if self.data['areacello'].shape != self.data['main'].shape:
+            weights = np.broadcast_to(self.data['areacello'].data, self.data['main'].data.shape)
+
+        self.data['main'] = self.data['main'].collapsed(['latitude', 'longitude'], iris.analysis.MEAN, weights=weights)
+        if 'min' in self.data:
+            self.data['min'] = self.data['min'].collapsed(['latitude', 'longitude'], iris.analysis.MEAN, weights=weights)
+            self.data['max'] = self.data['max'].collapsed(['latitude', 'longitude'], iris.analysis.MEAN, weights=weights)
+
     def update_units(self, factor):
         ''' Update the units of the main variable and, if they exist, min and max variables. '''
         self.data['main'].data = self.data['main'].data * factor

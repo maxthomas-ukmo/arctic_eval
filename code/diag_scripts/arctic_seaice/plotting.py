@@ -41,6 +41,7 @@ class SeasonalCycle(Loader):
         self.plot_description = 'Seasonal cycle'
         self.timerange = utils.get_timerange_from_input_data(self.input_data)
    
+        # ADD VARIABLE PROCESSING HERE >>>>>>>>>>>>>>>
         # Add variable specific attributes and perform variable specific procesing steps
         # The data passed by the loader should be gridded, 2D, and have been preprocessed into monthly means for each gridcell (so month_number x latitude x longitide)
         # ----- siconc
@@ -58,6 +59,10 @@ class SeasonalCycle(Loader):
             self.sum_over_area()
             self.update_units(10**-12) # units are m3, so we multiply by 10**-12 to get 1000.km3
             self.yvar_description = 'sum of sea ice volume [1000.km^3]'
+        elif self.variable == 'sisnthick':
+            self.cell_area_weighted_mean()
+            self.yvar_description = 'sea ice thickness [m]'
+        # <<<<<<<<<<<<<<<<<<<<
 
         # Make caption for the figure
         self.caption = utils.make_figure_caption(self.plot_description, self.yvar_description, self.region, self.timerange)
@@ -210,6 +215,9 @@ class Timeseries(Loader):
             self.sum_over_area()
             self.update_units(10**-12) # units are m3, so we multiply by 10**-12 to get 1000.km3
             self.yvar_description = 'sum of sea ice volume [1000.km^3]'
+        elif self.variable == 'sisnthick':
+            self.cell_area_weighted_mean()
+            self.yvar_description = 'sea ice thickness [m]'
 
         # Make caption for the figure
         self.caption = utils.make_figure_caption(self.plot_description, self.yvar_description, self.region, self.timerange)

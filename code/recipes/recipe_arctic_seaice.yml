@@ -112,11 +112,13 @@ diagnostics:
         <<: *seasonalcycle_var
         additional_datasets:
           - {dataset: PIOMAS, project: OBS, mip: day, tier: 2, type: reanaly, version: 2.1, ensemble: '', grid: '', alias: OBS_PIOMAS}
+      sisnthick:
+        <<: *seasonalcycle_var
     scripts:
       seasonal_cycle:
         script: ~/arctic_eval/code/diag_scripts/arctic_eval.py
         dummy_plot: False
-        variables_to_plot: [siconc, sivol]
+        variables_to_plot: [siconc, sivol, sisnthick]
         model_datasets: [HadGEM3-GC31-LL, HadGEM3-GC31-MM]
         regions: ['Arctic', 'EB', 'AB']
         obs_datasets: 
@@ -131,7 +133,7 @@ diagnostics:
   maps:
     description: Maps of March and September sea-ice concentration
     variables:
-      siconc: &maps_var
+      sisnthick: &maps_var
         mip: SImon
         exp: historical
         ensemble: r*i1p1f3
@@ -139,17 +141,21 @@ diagnostics:
         start_year: 1979
         end_year: 2001
         preprocessor: 2D_map # this excludes the sum
+      siconc: 
+        <<: *maps_var
         additional_datasets:
           -  {dataset: HadISST, project: OBS, mip: OImon, tier: 2, type: reanaly, version: 1, ensemble: '', grid: ''}
       sithick: 
         <<: *maps_var
         additional_datasets:
           - {dataset: PIOMAS, project: OBS, mip: day, tier: 2, type: reanaly, version: 2.1, ensemble: '', grid: ''}
+      sisnthick:
+        <<: *maps_var
     scripts:
       geo_map_march_sept:
         script: ~/arctic_eval/code/diag_scripts/arctic_eval.py
         dummy_plot: False
-        variables_to_plot: [siconc, sithick]
+        variables_to_plot: [siconc, sithick, sisnthick]
         regions: ['Arctic']
         model_datasets: [HadGEM3-GC31-LL, HadGEM3-GC31-MM]
         obs_datasets: 
@@ -168,7 +174,7 @@ diagnostics:
   timeseries:
     description: Time series of integrated variables
     variables:
-      siconc: &timeseries_var
+      sisnthick: &timeseries_var
         mip: SImon
         exp: historical
         ensemble: r*i1p1f3
@@ -176,6 +182,8 @@ diagnostics:
         start_year: 1979
         end_year: 2014
         preprocessor: timeseries_gs 
+      siconc: 
+        <<: *timeseries_var
         additional_datasets:
           -  {dataset: HadISST, project: OBS, mip: OImon, tier: 2, type: reanaly, version: 1, ensemble: '', grid: ''}
       areacello:
@@ -194,7 +202,7 @@ diagnostics:
       timeseries:
         script: ~/arctic_eval/code/diag_scripts/arctic_eval.py
         dummy_plot: False
-        variables_to_plot: [siconc, sithick]
+        variables_to_plot: [siconc, sithick, sisnthick]
         model_datasets: [HadGEM3-GC31-LL, HadGEM3-GC31-MM]
         obs_datasets: 
           siconc: HadISST

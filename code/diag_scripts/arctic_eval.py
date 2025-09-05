@@ -213,7 +213,7 @@ def plot_seasonal_cycles(cfg):
                     # Add ancestors to provenance record
                     provenance_record.add_ancestors(seasonal_cycle.provenance_list)
                 except:
-                    logger.warning('No data found for %s %s' % (variable, dataset))
+                    logger.warning('ERROR: Something went wrong while initialising SeasonalCycle for %s %s' % (variable, dataset))
 
             if variable in cfg['variables_to_plot_obs']:
                 # If the variable has been specified to plot an observational dataset, we plot that here
